@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using OpenPc.Api.Endpoints;
 using OpenPc.Infrastructure;
 using OpenPc.Infrastructure.Persistence;
 using OpenPc.Infrastructure.Persistence.Seed;
@@ -17,6 +18,8 @@ try
         .WriteTo.Console());
 
     builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddStackExchangeRedisCache(o =>
+        o.Configuration = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379");
     builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
         .WithOrigins("http://localhost:4200", "http://localhost:8080")
         .AllowAnyHeader()
@@ -28,6 +31,7 @@ try
     app.UseSerilogRequestLogging();
     app.UseCors();
     app.MapOpenApi();
+    app.MapCatalogEndpoints();
 
     app.MapGet("/api/v1/health", async (AppDbContext db) =>
     {

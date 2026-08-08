@@ -5,4 +5,7 @@
     <Project Path="src/OpenPc.Infrastructure/OpenPc.Infrastructure.csproj" />
     <Project Path="src/OpenPc.Scraper/OpenPc.Scraper.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OpenPc.Scraper.Tests/OpenPc.Scraper.Tests.csproj" />
+  </Folder>
 </Solution>

@@ -4,6 +4,9 @@ namespace OpenPc.Infrastructure.Persistence.Seed;
 
 public static class SeedData
 {
+    public const string CronCatalogDaily = "0 30 4 * * ?";      // 04:30 diário
+    public const string CronHotPrices = "0 0 */6 * * ?";        // a cada 6h
+
     public static readonly Category[] Categories =
     [
         new() { Slug = "cpu", Name = "Processadores", DisplayOrder = 1 },
@@ -22,4 +25,18 @@ public static class SeedData
         new() { Slug = "terabyte", Name = "Terabyte Shop", BaseUrl = "https://www.terabyteshop.com.br" },
         new() { Slug = "pichau", Name = "Pichau", BaseUrl = "https://www.pichau.com.br" },
     ];
+
+    /// <summary>Categorias de preço volátil: coleta 4×/dia; o resto, diário.</summary>
+    public static readonly string[] HotCategories = ["cpu", "gpu"];
+
+    public static ScrapeJob[] BuildJobs(Guid[] categoryIds, Guid[] storeIds) =>
+        categoryIds
+            .SelectMany(catId => storeIds.Select(storeId => new ScrapeJob
+            {
+                StoreId = storeId,
+                CategoryId = catId,
+                ScheduleCron = CronCatalogDaily,
+                Enabled = true,
+            }))
+            .ToArray();
 }

@@ -21,6 +21,24 @@ public static class DbSeeder
             logger.LogInformation("Seed: {Count} lojas inseridas", SeedData.Stores.Length);
         }
 
+        if (!await db.ScrapeJobs.AnyAsync(ct))
+        {
+            var categoryIds = db.Categories.Select(c => c.Id).ToArray();
+            var storeIds = db.Stores.Select(s => s.Id).ToArray();
+            var jobs = SeedData.BuildJobs(categoryIds, storeIds);
+
+            // Categorias quentes (CPU/GPU) sobrescrevem a cron para 4×/dia.
+            var hotIds = db.Categories
+                .Where(c => SeedData.HotCategories.Contains(c.Slug))
+                .Select(c => c.Id)
+                .ToArray();
+            foreach (var job in jobs.Where(j => hotIds.Contains(j.CategoryId)))
+                job.ScheduleCron = SeedData.CronHotPrices;
+
+            db.ScrapeJobs.AddRange(jobs);
+            logger.LogInformation("Seed: {Count} jobs de scraping inseridos", jobs.Length);
+        }
+
         await db.SaveChangesAsync(ct);
     }
 }

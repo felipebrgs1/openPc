@@ -58,25 +58,42 @@ forem viáveis, repensar escopo antes de seguir.
 
 ---
 
-## M2 — Catálogo: ingestão + API de leitura
+## M2 — Catálogo: ingestão + API de leitura ✅ (validado 2026-08-08)
 
 **Objetivo:** banco populado com produtos reais e API servindo o catálogo.
 
-- [ ] Schema completo: `products`, `product_attributes`, `listings`,
-      `price_history`, `scrape_jobs`, `scrape_runs`
-- [ ] `IStoreCollector` + collectors de produção (Kabum, Terabyte, Pichau)
-- [ ] Normalizer: parse de specs por categoria → `product_attributes`
-- [ ] Dedup níveis 1 e 2 (EAN + tokens) + fila de revisão manual
-- [ ] Scheduler (Quartz.NET): catálogo diário, preços 4×/dia em GPU/CPU
-- [ ] Endpoints: `GET /categories`, `GET /products` (busca, filtros por
-      atributo, ordenação), `GET /products/{id}`, `GET /stores`,
+- [x] Schema completo: `products`, `product_attributes`, `listings`,
+      `price_history`, `scrape_jobs`, `scrape_runs` + `product_match_candidates`
+      + extensão `pg_trgm` (índice GIN no nome)
+- [x] `IStoreCollector` + collectors de produção: Kabum (HTTP/`__NEXT_DATA__`),
+      Pichau/Terabyte (Playwright via `BrowserCollectorBase`)
+- [x] Normalizer: `SpecExtractor` (CPU: socket/cores/threads/iGPU/TDP/DDR;
+      GPU: memória/TDP/dimensões/conectores) + `MatchKey` + `PartNumber`
+- [x] Dedup: part number (AMD/Intel) + match key marca+modelo + fila de
+      revisão (`no_anchor` em CPU/GPU sem âncora)
+- [x] Scheduler (Quartz.NET): um job por linha de `scrape_jobs`, cron na row
+      (catálogo 04:30 diário, CPU/GPU a cada 6h); `run-once [loja] [categoria]`
+- [x] Endpoints: `GET /categories`, `GET /stores`, `GET /products` (q, brand,
+      min/maxPrice, `attrs[socket]=am5`, sort, paginação), `GET /products/{id}`,
       `GET /health/scrapers`
-- [ ] Cache Redis nas listagens
-- [ ] Testes: normalizer com fixtures HTML versionadas por loja
+- [x] Cache Redis (5 min) nas listagens
+- [x] Testes: 33/33 passando — normalizer, parsers (fixtures Kabum real +
+      cards Pichau/Terabyte reais do M1), price parser BR
 
-**Critério de aceite:** catálogo com ≥3 lojas e ≥1.500 produtos; busca por
-"7600" retorna o mesmo produto canônico com ofertas de lojas diferentes;
-`scrape_runs` mostra runs diários saudáveis.
+**Critério de aceite:** ✅ catálogo com 3 lojas e ~6.200 produtos; busca
+"7600" retorna o canônico `amd 7600x` com ofertas de **Kabum, Pichau e
+Terabyte**; `scrape_runs` saudáveis por loja.
+
+**Achados operacionais (registrados no código/docs):**
+- Rotas reais da Kabum via sitemap: `placas-mae`, `placa-de-video-vga`,
+  `fontes`, `coolers`, `ssd-2-5` — gabinete sem rota pública (TODO aberto).
+- Terabyte **trunca part numbers** nos slugs (limite de URL) — o match key
+  cobre o caso; part number truncado não casa.
+- Preço de card por regex tolera separador `|` (`por | R$ 1.599,99`).
+- Bugs corrigidos no caminho: `JsonDocument` disposto com `JsonElement` vivo,
+  `Normalize` removendo espaços (quebrava regexes), chave de dedup com marca
+  duplicada (`intel intel 265f`), ancestral de card subindo até o grid
+  (misturava nome/preço de cards diferentes — agora descarta >2 anchors).
 
 ---
 

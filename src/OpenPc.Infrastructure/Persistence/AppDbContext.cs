@@ -7,6 +7,13 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 {
     public DbSet<Store> Stores => Set<Store>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<ProductAttribute> ProductAttributes => Set<ProductAttribute>();
+    public DbSet<Listing> Listings => Set<Listing>();
+    public DbSet<PriceHistory> PriceHistory => Set<PriceHistory>();
+    public DbSet<ScrapeJob> ScrapeJobs => Set<ScrapeJob>();
+    public DbSet<ScrapeRun> ScrapeRuns => Set<ScrapeRun>();
+    public DbSet<ProductMatchCandidate> MatchCandidates => Set<ProductMatchCandidate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

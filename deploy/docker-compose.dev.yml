@@ -53,10 +53,17 @@ services:
       target: development
     environment:
       ConnectionStrings__Default: Host=db;Port=5432;Database=openpc;Username=openpc;Password=openpc_dev
+      Redis__ConnectionString: redis:6379
     ports:
       - "5080:8080"
     volumes:
+      # obj/ mascarado por volume anônimo: o `dotnet watch` do container
+      # escreve nos próprios obj/ e não trava os builds do host.
       - ../src:/src/src
+      - /src/src/OpenPc.Api/obj
+      - /src/src/OpenPc.Domain/obj
+      - /src/src/OpenPc.Infrastructure/obj
+      - /src/src/OpenPc.Scraper/obj
     depends_on:
       db:
         condition: service_healthy
@@ -74,6 +81,25 @@ services:
     depends_on:
       api:
         condition: service_started
+
+  scraper:
+    build:
+      context: ..
+      dockerfile: src/OpenPc.Scraper/Dockerfile
+      target: development
+    environment:
+      ConnectionStrings__Default: Host=db;Port=5432;Database=openpc;Username=openpc;Password=openpc_dev
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+    volumes:
+      - ../src:/src/src
+      - /src/src/OpenPc.Api/obj
+      - /src/src/OpenPc.Domain/obj
+      - /src/src/OpenPc.Infrastructure/obj
+      - /src/src/OpenPc.Scraper/obj
+      - ~/.cache/ms-playwright:/ms-playwright
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   pgdata:
