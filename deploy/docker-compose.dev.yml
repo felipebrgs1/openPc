@@ -1,0 +1,79 @@
+# ============================================================
+# OpenPC — ambiente de desenvolvimento (M0)
+#
+# Subir a stack inteira:
+#   docker compose -f deploy/docker-compose.dev.yml up --build -d
+#
+# URLs:
+#   web   -> http://localhost:4200  (Angular dev server + HMR)
+#   api   -> http://localhost:5080  (health: /api/v1/health)
+#   db    -> localhost:5432  (openpc / openpc / openpc_dev)
+#   redis -> localhost:6379
+#
+# Alternativa sem containers para web/api (SDK local):
+#   cd web && npm start            (proxy -> localhost:5080)
+#   dotnet watch run --project src/OpenPc.Api
+# ============================================================
+
+name: openpc-dev
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: openpc
+      POSTGRES_USER: openpc
+      POSTGRES_PASSWORD: openpc_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      # PG 18+: mount em /var/lib/postgresql (dados ficam em subdiretório
+      # major-version — permite pg_upgrade sem quebra de mount).
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openpc -d openpc"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: src/OpenPc.Api/Dockerfile
+      target: development
+    environment:
+      ConnectionStrings__Default: Host=db;Port=5432;Database=openpc;Username=openpc;Password=openpc_dev
+    ports:
+      - "5080:8080"
+    volumes:
+      - ../src:/src/src
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ../web
+    ports:
+      - "4200:4200"
+    volumes:
+      - ../web/src:/app/src
+      - ../web/proxy.conf.container.json:/app/proxy.conf.container.json
+    depends_on:
+      api:
+        condition: service_started
+
+volumes:
+  pgdata:

@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OpenPc.Api/OpenPc.Api.csproj" />
+    <Project Path="src/OpenPc.Domain/OpenPc.Domain.csproj" />
+    <Project Path="src/OpenPc.Infrastructure/OpenPc.Infrastructure.csproj" />
+    <Project Path="src/OpenPc.Scraper/OpenPc.Scraper.csproj" />
+  </Folder>
+</Solution>

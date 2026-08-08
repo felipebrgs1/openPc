@@ -1,0 +1,28 @@
+# --- .NET ---
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+
+# --- Node / Angular ---
+node_modules/
+web/dist/
+web/.angular/
+web/.tmp/
+npm-debug.log*
+
+# --- Ambiente ---
+.env
+.env.*
+!.env.example
+
+# --- Editor / OS ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# --- Docker ---
+pgdata/
