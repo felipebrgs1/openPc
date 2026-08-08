@@ -64,6 +64,18 @@ export class Category {
 
   constructor() {
     this.seo.set('Peças de PC');
+
+    // Troca de categoria (a rota /pecas/:category reutiliza a instância):
+    // zera o socket ao sair de cpu/motherboard (o select some e o filtro
+    // ficaria invisível — GPU sem socket filtraria para lista vazia) e
+    // descarta o lastGood da categoria anterior (senão a lista antiga
+    // pisca durante o load da nova).
+    effect(() => {
+      const cat = this.category();
+      if (cat !== 'cpu' && cat !== 'motherboard') this.socket.set('');
+      this.lastGood.set(null);
+    });
+
     effect(() => {
       try {
         const v = this.products.value();
