@@ -6,7 +6,7 @@
   <nav class="text-sm text-zinc-500">
     <a routerLink="/montar" class="hover:text-brand-600">Montador</a>
     <span class="mx-1">/</span>
-    <span class="text-zinc-800">{{ b.name }}</span>
+    <span class="font-medium text-zinc-800">{{ b.name }}</span>
   </nav>
 
   <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
@@ -14,64 +14,109 @@
       <h2 class="text-xl font-bold text-zinc-900">{{ b.name }}</h2>
       <p class="text-sm text-zinc-500">Atualizado em {{ formatDateTime(b.updatedAt) }}</p>
     </div>
-    <button
-      type="button"
-      (click)="clone()"
-      [disabled]="cloning()"
-      class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-60"
-    >
+    <button type="button" (click)="clone()" [disabled]="cloning()" class="btn-primary">
       {{ cloning() ? 'Clonando...' : 'Clonar e editar' }}
     </button>
   </div>
 
-  <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-    <div class="rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <ul class="divide-y divide-zinc-100">
-        @for (item of b.items; track item.category) {
-          <li class="flex items-center justify-between gap-3 px-4 py-3">
-            <div class="min-w-0">
-              <p class="text-xs font-medium text-zinc-400">{{ categoryLabel(item.category) }}</p>
+  @if (b.compatibility.errors.length > 0) {
+    <div class="mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+      <span class="mt-0.5 text-red-600">✕</span>
+      <p class="text-sm font-semibold text-red-800">
+        {{ b.compatibility.errors.length }} problema{{
+          b.compatibility.errors.length > 1 ? 's' : ''
+        }}
+        de compatibilidade neste build
+      </p>
+    </div>
+  } @else if (b.compatibility.warnings.length > 0) {
+    <div class="mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+      <span class="mt-0.5 text-amber-600">⚠</span>
+      <p class="text-sm font-semibold text-amber-800">
+        {{ b.compatibility.warnings.length }} aviso{{
+          b.compatibility.warnings.length > 1 ? 's' : ''
+        }}
+        de compatibilidade neste build
+      </p>
+    </div>
+  } @else {
+    <div class="mt-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+      <span class="text-emerald-600">✓</span>
+      <p class="text-sm font-semibold text-emerald-800">
+        Nenhum problema de compatibilidade encontrado
+      </p>
+    </div>
+  }
+
+  <div class="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+    <section class="card h-fit overflow-hidden">
+      <div
+        class="hidden grid-cols-[150px_minmax(0,1fr)_110px] gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-2 text-xs font-semibold tracking-wide text-zinc-500 uppercase sm:grid"
+      >
+        <span>Componente</span>
+        <span>Peça</span>
+        <span class="text-right">Preço</span>
+      </div>
+
+      @for (item of b.items; track item.category) {
+        <div
+          class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b border-zinc-100 px-4 py-3 sm:grid-cols-[150px_minmax(0,1fr)_110px]"
+        >
+          <span class="col-span-2 flex items-center gap-2 text-sm font-semibold text-zinc-600 sm:col-span-1">
+            <span class="text-brand-500">
+              <app-category-icon [slug]="item.category" [size]="18" />
+            </span>
+            {{ categoryLabel(item.category) }}
+          </span>
+          <span class="flex min-w-0 items-center gap-3">
+            @if (item.imageUrl) {
+              <img [src]="item.imageUrl" [alt]="item.name" class="h-10 w-10 shrink-0 object-contain" />
+            }
+            <span class="min-w-0">
               <a
                 routerLink="/pecas/{{ item.category }}/{{ item.productId }}"
-                class="line-clamp-2 text-sm font-medium text-zinc-800 hover:text-brand-700"
+                class="block truncate text-sm text-zinc-800 hover:text-brand-700"
               >
                 {{ item.name ?? '—' }}
               </a>
-            </div>
-            <div class="shrink-0 text-right">
-              <p class="text-sm font-bold text-zinc-900">{{ formatBRL(item.price) }}</p>
               @if (item.storeSlug) {
-                <p class="text-xs text-zinc-400">{{ item.storeSlug }}</p>
+                <span class="badge mt-0.5">{{ item.storeSlug }}</span>
               }
-            </div>
-          </li>
-        } @empty {
-          <li class="px-4 py-3 text-sm text-zinc-500">Build vazio.</li>
-        }
-      </ul>
-      <div class="flex items-center justify-between border-t border-zinc-200 px-4 py-3">
-        <span class="text-sm font-semibold text-zinc-700">Total</span>
-        <span class="text-lg font-bold text-zinc-900">{{ formatBRL(b.totalPrice) }}</span>
+            </span>
+          </span>
+          <span class="text-right text-sm font-bold text-zinc-900">
+            {{ formatBRL(item.price) }}
+          </span>
+        </div>
+      } @empty {
+        <p class="px-4 py-3 text-sm text-zinc-500">Build vazio.</p>
+      }
+
+      <div class="flex items-center justify-between bg-brand-50 px-4 py-3">
+        <span class="text-sm font-semibold text-brand-800">Total</span>
+        <span class="text-lg font-bold text-brand-800">{{ formatBRL(b.totalPrice) }}</span>
       </div>
-    </div>
+    </section>
 
     <aside class="space-y-4">
-      <div class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-        <p class="text-sm font-semibold text-zinc-700">Total por loja</p>
+      <div class="card p-4">
+        <p class="card-title">Total por loja</p>
         @for (store of comparison.value()?.perStore ?? []; track store.storeSlug) {
           <div class="mt-2 flex items-baseline justify-between text-sm">
             <span class="text-zinc-600">{{ store.storeName }}</span>
             <span class="font-medium text-zinc-900">{{ formatBRL(store.total) }}</span>
           </div>
-          <p class="text-xs text-zinc-400">{{ store.coveredItems }} de {{ store.totalItems }} peças</p>
+          <p class="text-xs text-zinc-400">
+            {{ store.coveredItems }} de {{ store.totalItems }} peças
+          </p>
         } @empty {
           <p class="mt-2 text-sm text-zinc-400">Sem ofertas em estoque.</p>
         }
       </div>
 
       @if (b.compatibility.errors.length > 0 || b.compatibility.warnings.length > 0) {
-        <div class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-          <p class="text-sm font-semibold text-zinc-700">Compatibilidade</p>
+        <div class="card p-4">
+          <p class="card-title">Compatibilidade</p>
           @for (issue of b.compatibility.errors; track issue.code) {
             <p class="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-800">
               {{ issue.message }}

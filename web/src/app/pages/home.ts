@@ -3,10 +3,11 @@ import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
 import type { Category } from '../api';
 import { Seo } from '../seo';
+import { CategoryIcon } from '../components/category-icon';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink],
+  imports: [RouterLink, CategoryIcon],
   templateUrl: './home.html',
 })
 export class Home {

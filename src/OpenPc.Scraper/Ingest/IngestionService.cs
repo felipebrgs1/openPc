@@ -20,6 +20,17 @@ public sealed class IngestionService(AppDbContext db, ILogger<IngestionService> 
     {
         var category = await db.Categories.SingleAsync(c => c.Slug == categorySlug, ct);
 
+        // descarta ruído de categoria (contact frame em cpu, suporte em gpu,
+        // fonte de notebook / cross-listing em psu...) antes de persistir.
+        var relevant = items
+            .Where(i => !CategoryNoiseFilter.IsNoise(categorySlug, i.Title))
+            .ToArray();
+        if (relevant.Length < items.Count)
+            logger.LogInformation(
+                "Ingestão {Store}/{Category}: {Skipped} itens descartados como ruído de categoria",
+                store.Slug, categorySlug, items.Count - relevant.Length);
+        items = relevant;
+
         var byPartNumber = await db.Products
             .Where(p => p.CategoryId == category.Id && p.PartNumber != null)
             .ToDictionaryAsync(p => p.PartNumber!, ct);

@@ -184,6 +184,27 @@ Chromium, dados reais).
   seguem sem specs e passam no filtro como compatíveis (conservador por
   design) — corrigido por re-scrape futuro (regra agents.md: sem scraping
   sem pedido).
+- **Limpeza de ruído de catálogo (feedback 2026-08-08)**: `CategoryNoiseFilter`
+  na ingestão + comando `cleanup-noise` no scraper — palavras-chave por
+  categoria (contact frame em cpu, suporte/riser/cabo/soundbar em gpu, fonte
+  de notebook em psu, pasta/massa/cabo em cooler, monitor em storage) e
+  marcadores de **outra** categoria com borda de palavra (cross-listing das
+  rotas Kabum: CPU/GPU/RAM em psu, placa-mãe/GPU/RAM em gpu e memory).
+  Banco limpo: **2.219 produtos removidos** (psu 188→38, gpu 562→236,
+  cooler 4.092→3.128, memory 2.850→2.648, mobo 2.488→2.089, cpu 541→519,
+  storage 347→221). Falsos positivos evitados: GDDR5, 80 Plus Titanium,
+  Cooler Master, "Socket AM5" em CPU, "Gabinete com fonte", "ventoinha" em
+  gabinete. Montador em **coluna única** (preço mantido no topo-direita).
+- **Segunda rodada de limpeza (2026-08-08)**: memória SODIMM/para notebook
+  (665 → 0 em memory), placas-mãe de notebook/sucata (mobo), pendrives
+  (storage) e **CPUs antigas** — política: só CPUs que a engine consegue
+  avaliar (Intel ≥ 12th, AMD Ryzen/Athlon AM4+, Ultra 2xx; fora: Intel ≤ 11th,
+  Xeon, A-series/FX, mobile). Classificação pelo título cru (o `MatchKey`
+  junta "i5-12400F" em "i512400f" e quebra o regex; o match key de
+  "Ryzen 5 Pro 5650G" vira GUID pelo "Pro"). **+1.081 removidos**
+  (memory 2.648→1.977, cpu 519→130, mobo 2.089→2.070, storage 221→219).
+  Total acumulado: **~3.300 produtos removidos** sem re-scraping;
+  `cleanup-noise --dry-run` lista contagem/amostra antes de deletar.
 
 ---
 

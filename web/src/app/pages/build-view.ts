@@ -6,10 +6,11 @@ import { categoryLabel } from '../api';
 import { formatBRL, formatDateTime } from '../format';
 import { Seo } from '../seo';
 import { BuildState } from '../build-state';
+import { CategoryIcon } from '../components/category-icon';
 
 @Component({
   selector: 'app-build-view',
-  imports: [RouterLink],
+  imports: [RouterLink, CategoryIcon],
   templateUrl: './build-view.html',
 })
 export class BuildView {

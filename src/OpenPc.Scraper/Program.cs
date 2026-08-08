@@ -4,6 +4,7 @@ using OpenPc.Infrastructure.Persistence.Seed;
 using OpenPc.Scraper.Collectors;
 using OpenPc.Scraper.Ingest;
 using OpenPc.Scraper.Jobs;
+using OpenPc.Scraper.Normalization;
 using Quartz;
 using Serilog;
 
@@ -48,6 +49,45 @@ try
         var store = args.Length > 1 ? args[1] : null;
         var category = args.Length > 2 ? args[2] : null;
         await collection.RunAllEnabledAsync(store, category, CancellationToken.None);
+        Log.CloseAndFlush();
+        return;
+    }
+
+    if (args.Length > 0 && args[0] == "cleanup-noise")
+    {
+        // Remove do banco produtos que não pertencem à categoria (mesmo filtro
+        // da ingestão) — para limpar o que entrou antes do filtro. Não coleta nada.
+        // `--dry-run` apenas conta e amostra, sem deletar.
+        var category = args.Length > 1 && !args[1].StartsWith("--") ? args[1] : null;
+        var dryRun = args.Contains("--dry-run");
+        await using var scope = host.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("CleanupNoise");
+
+        var products = await db.Products
+            .Include(p => p.Category)
+            .ToListAsync(CancellationToken.None);
+
+        var toDelete = products
+            .Where(p => (category is null || p.Category.Slug == category)
+                        && CategoryNoiseFilter.IsNoise(p.Category.Slug, p.Name))
+            .ToList();
+
+        if (dryRun)
+        {
+            foreach (var g in toDelete.GroupBy(p => p.Category.Slug).OrderBy(g => g.Key))
+                logger.LogInformation("dry-run {Category}: {Count} produtos (ex: {Sample})",
+                    g.Key, g.Count(), g.First().Name);
+            Log.CloseAndFlush();
+            return;
+        }
+
+        db.Products.RemoveRange(toDelete);
+        await db.SaveChangesAsync(CancellationToken.None);
+
+        logger.LogInformation("cleanup-noise: {Count} produtos removidos ({Category})",
+            toDelete.Count, category ?? "todas as categorias");
         Log.CloseAndFlush();
         return;
     }

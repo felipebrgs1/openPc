@@ -1,55 +1,120 @@
 <nav class="text-sm text-zinc-500">
   <a routerLink="/" class="hover:text-brand-600">Catálogo</a>
   <span class="mx-1">/</span>
-  <span class="text-zinc-800">{{ categoryName() }}</span>
+  <span class="font-medium text-zinc-800">{{ categoryName() }}</span>
 </nav>
 
-<div class="mt-4 flex flex-wrap items-center gap-3">
-  <input
-    #q
-    type="search"
-    placeholder="Buscar na categoria (ex: 7600)"
-    (keyup.enter)="applyQuery($event)"
-    class="w-full max-w-sm rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none"
-  />
-  <select
-    (change)="changeSort($event)"
-    class="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none"
-  >
-    <option value="price_asc">Menor preço</option>
-    <option value="price_desc">Maior preço</option>
-    <option value="name">Nome</option>
-  </select>
-</div>
+<div class="mt-4 grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
+  <!-- Filtros -->
+  <aside class="card h-fit p-4 lg:sticky lg:top-20">
+    <p class="card-title">Filtrar</p>
 
-<section class="mt-4">
-  <h2 class="text-lg font-semibold text-zinc-800">{{ categoryName() }}</h2>
-
-  @if (products.isLoading()) {
-    <p class="mt-4 text-sm text-zinc-500">Carregando peças...</p>
-  } @else if (products.error()) {
-    <p class="mt-4 text-sm text-red-600">Não foi possível carregar as peças.</p>
-  } @else if (products.value(); as page) {
-    @if (page.items.length === 0) {
-      <p class="mt-4 text-sm text-zinc-500">Nenhuma peça encontrada.</p>
-    } @else {
-      <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        @for (product of page.items; track product.id) {
-          <app-product-card [product]="product" />
-        }
+    <form
+      class="mt-3 space-y-3"
+      (submit)="applyFilters(q, minEl, maxEl); $event.preventDefault()"
+    >
+      <div>
+        <label for="f-q" class="mb-1 block text-xs font-medium text-zinc-500">Buscar</label>
+        <input
+          #q
+          id="f-q"
+          type="search"
+          placeholder="ex: 7600"
+          class="input"
+        />
       </div>
 
-      @if (page.items.length < page.total) {
-        <div class="mt-6 text-center">
-          <button
-            type="button"
-            (click)="loadMore()"
-            class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:border-brand-500 hover:text-brand-700"
-          >
-            Carregar mais ({{ page.items.length }} de {{ page.total }})
-          </button>
+      <div>
+        <label for="f-sort" class="mb-1 block text-xs font-medium text-zinc-500">
+          Ordenar por
+        </label>
+        <select id="f-sort" (change)="changeSort($event)" class="input">
+          <option value="price_asc">Menor preço</option>
+          <option value="price_desc">Maior preço</option>
+          <option value="name">Nome</option>
+        </select>
+      </div>
+
+      <div>
+        <span class="mb-1 block text-xs font-medium text-zinc-500">Faixa de preço</span>
+        <div class="flex items-center gap-2">
+          <input #minEl type="number" min="0" placeholder="Mín" class="input" />
+          <span class="text-zinc-400">–</span>
+          <input #maxEl type="number" min="0" placeholder="Máx" class="input" />
         </div>
+      </div>
+
+      <div class="flex gap-2 pt-1">
+        <button type="submit" class="btn-primary flex-1 !py-1.5">Aplicar</button>
+        <button type="button" (click)="clearFilters(q, minEl, maxEl)" class="btn-ghost !px-2 !py-1.5">
+          Limpar
+        </button>
+      </div>
+    </form>
+  </aside>
+
+  <!-- Lista de peças -->
+  <section>
+    <div class="flex items-baseline justify-between">
+      <h2 class="text-lg font-semibold text-zinc-900">{{ categoryName() }}</h2>
+      @if (products.value(); as page) {
+        <span class="text-sm text-zinc-400">{{ page.total }} peças</span>
+      }
+    </div>
+
+    @if (products.isLoading()) {
+      <p class="mt-4 text-sm text-zinc-500">Carregando peças...</p>
+    } @else if (products.error()) {
+      <p class="mt-4 text-sm text-red-600">Não foi possível carregar as peças.</p>
+    } @else if (products.value(); as page) {
+      @if (page.items.length === 0) {
+        <p class="card mt-4 p-6 text-center text-sm text-zinc-500">
+          Nenhuma peça encontrada com esses filtros.
+        </p>
+      } @else {
+        <div class="card mt-4 divide-y divide-zinc-100">
+          @for (product of page.items; track product.id) {
+            <a
+              routerLink="/pecas/{{ product.categorySlug }}/{{ product.id }}"
+              class="group flex items-center gap-3 px-3 py-2.5 transition hover:bg-brand-50/60 sm:px-4"
+            >
+              <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-zinc-50 p-1">
+                @if (product.imageUrl) {
+                  <img
+                    [src]="product.imageUrl"
+                    [alt]="product.name"
+                    loading="lazy"
+                    class="max-h-full max-w-full object-contain"
+                  />
+                }
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="line-clamp-2 text-sm font-medium text-zinc-800 group-hover:text-brand-700">
+                  {{ product.name }}
+                </p>
+                <p class="mt-0.5 text-xs text-zinc-400">
+                  {{ product.brand }}
+                  @if (product.storeCount > 1) {
+                    · {{ product.storeCount }} lojas
+                  }
+                </p>
+              </div>
+              <div class="shrink-0 text-right">
+                <p class="text-sm font-bold text-zinc-900">{{ formatBRL(product.price) }}</p>
+                <p class="text-xs text-zinc-400 group-hover:text-brand-600">Detalhes →</p>
+              </div>
+            </a>
+          }
+        </div>
+
+        @if (page.items.length < page.total) {
+          <div class="mt-5 text-center">
+            <button type="button" (click)="loadMore()" class="btn-outline">
+              Carregar mais ({{ page.items.length }} de {{ page.total }})
+            </button>
+          </div>
+        }
       }
     }
-  }
-</section>
+  </section>
+</div>

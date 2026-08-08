@@ -11,8 +11,8 @@
     </a>
   </nav>
 
-  <div class="mt-4 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-    <div class="flex h-72 items-center justify-center rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+  <div class="card mt-4 grid gap-6 p-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+    <div class="flex h-72 items-center justify-center rounded-xl bg-zinc-50 p-4">
       @if (p.imageUrl) {
         <img [src]="p.imageUrl" [alt]="p.name" class="max-h-full max-w-full object-contain" />
       } @else {
@@ -26,46 +26,41 @@
         {{ p.brand }}{{ p.model ? ' · ' + p.model : '' }}{{ p.partNumber ? ' · ' + p.partNumber : '' }}
       </p>
 
-      <p class="mt-4 text-3xl font-bold text-zinc-900">{{ formatBRL(bestPrice()) }}</p>
+      <div class="mt-5 rounded-xl bg-brand-50 px-4 py-3">
+        <p class="text-xs font-semibold tracking-wide text-brand-600 uppercase">
+          Melhor preço em estoque
+        </p>
+        <p class="mt-0.5 text-3xl font-bold text-brand-800">{{ formatBRL(bestPrice()) }}</p>
+      </div>
 
       <div class="mt-4 flex flex-wrap gap-2">
         @if (added()) {
-          <a routerLink="/montar" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+          <a routerLink="/montar" class="btn-primary !bg-emerald-600 hover:!bg-emerald-700">
             Adicionado — ver meu build
           </a>
         } @else {
-          <button
-            type="button"
-            (click)="addToBuild()"
-            [disabled]="adding()"
-            class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-60"
-          >
+          <button type="button" (click)="addToBuild()" [disabled]="adding()" class="btn-primary">
             {{ adding() ? 'Adicionando...' : 'Adicionar ao build' }}
           </button>
         }
-        <a
-          routerLink="/montar"
-          class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:border-brand-500 hover:text-brand-700"
-        >
-          Abrir montador
-        </a>
+        <a routerLink="/montar" class="btn-outline">Abrir montador</a>
       </div>
     </div>
   </div>
 
-  <div class="mt-8 grid gap-6 lg:grid-cols-2">
-    <app-sparkline [points]="prices.value() ?? []" />
-
-    <div class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-      <p class="text-sm font-semibold text-zinc-700">Ofertas por loja</p>
-      <ul class="mt-3 divide-y divide-zinc-100">
+  <div class="mt-6 grid gap-6 lg:grid-cols-2">
+    <div class="card overflow-hidden">
+      <p class="border-b border-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700">
+        Ofertas por loja
+      </p>
+      <ul class="divide-y divide-zinc-100">
         @for (listing of p.listings; track listing.storeSlug) {
-          <li class="flex items-center justify-between gap-3 py-2.5">
+          <li class="flex items-center justify-between gap-3 px-4 py-3">
             <div>
               <p class="font-medium text-zinc-800">{{ listing.storeName }}</p>
               <p class="text-xs text-zinc-500">
                 @if (listing.inStock) {
-                  Em estoque
+                  <span class="text-emerald-600">Em estoque</span>
                 } @else {
                   <span class="text-red-600">Esgotado</span>
                 }
@@ -74,29 +69,39 @@
                 }
               </p>
             </div>
-            <div class="text-right">
-              <p class="font-semibold text-zinc-900">{{ formatBRL(listing.priceCash) }}</p>
+            <div class="flex shrink-0 items-center gap-3">
+              <p
+                class="font-semibold"
+                [class.text-brand-700]="listing.priceCash === bestPrice()"
+                [class.text-zinc-900]="listing.priceCash !== bestPrice()"
+              >
+                {{ formatBRL(listing.priceCash) }}
+              </p>
               <a
                 [href]="listing.url"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-xs text-brand-600 hover:underline"
+                class="btn-outline !px-2.5 !py-1 !text-xs"
               >
                 Ver na loja
               </a>
             </div>
           </li>
         } @empty {
-          <li class="py-2.5 text-sm text-zinc-500">Nenhuma oferta disponível.</li>
+          <li class="px-4 py-3 text-sm text-zinc-500">Nenhuma oferta disponível.</li>
         }
       </ul>
     </div>
+
+    <app-sparkline [points]="prices.value() ?? []" />
   </div>
 
   @if (p.specs.length > 0) {
-    <div class="mt-6 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
-      <p class="text-sm font-semibold text-zinc-700">Especificações</p>
-      <dl class="mt-3 grid grid-cols-1 gap-x-8 sm:grid-cols-2">
+    <div class="card mt-6 overflow-hidden">
+      <p class="border-b border-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700">
+        Especificações
+      </p>
+      <dl class="grid grid-cols-1 gap-x-8 px-4 py-2 sm:grid-cols-2">
         @for (spec of p.specs; track spec.key) {
           <div class="flex justify-between gap-4 border-b border-zinc-100 py-2 text-sm">
             <dt class="text-zinc-500">{{ specLabel(spec.key) }}</dt>
