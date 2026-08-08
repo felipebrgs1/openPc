@@ -1,0 +1,55 @@
+<nav class="text-sm text-zinc-500">
+  <a routerLink="/" class="hover:text-brand-600">Catálogo</a>
+  <span class="mx-1">/</span>
+  <span class="text-zinc-800">{{ categoryName() }}</span>
+</nav>
+
+<div class="mt-4 flex flex-wrap items-center gap-3">
+  <input
+    #q
+    type="search"
+    placeholder="Buscar na categoria (ex: 7600)"
+    (keyup.enter)="applyQuery($event)"
+    class="w-full max-w-sm rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none"
+  />
+  <select
+    (change)="changeSort($event)"
+    class="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none"
+  >
+    <option value="price_asc">Menor preço</option>
+    <option value="price_desc">Maior preço</option>
+    <option value="name">Nome</option>
+  </select>
+</div>
+
+<section class="mt-4">
+  <h2 class="text-lg font-semibold text-zinc-800">{{ categoryName() }}</h2>
+
+  @if (products.isLoading()) {
+    <p class="mt-4 text-sm text-zinc-500">Carregando peças...</p>
+  } @else if (products.error()) {
+    <p class="mt-4 text-sm text-red-600">Não foi possível carregar as peças.</p>
+  } @else if (products.value(); as page) {
+    @if (page.items.length === 0) {
+      <p class="mt-4 text-sm text-zinc-500">Nenhuma peça encontrada.</p>
+    } @else {
+      <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        @for (product of page.items; track product.id) {
+          <app-product-card [product]="product" />
+        }
+      </div>
+
+      @if (page.items.length < page.total) {
+        <div class="mt-6 text-center">
+          <button
+            type="button"
+            (click)="loadMore()"
+            class="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:border-brand-500 hover:text-brand-700"
+          >
+            Carregar mais ({{ page.items.length }} de {{ page.total }})
+          </button>
+        </div>
+      }
+    }
+  }
+</section>

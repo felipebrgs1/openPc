@@ -1,0 +1,89 @@
+@if (build.isLoading()) {
+  <p class="text-sm text-zinc-500">Carregando build...</p>
+} @else if (build.error()) {
+  <p class="text-sm text-red-600">Build não encontrado.</p>
+} @else if (build.value(); as b) {
+  <nav class="text-sm text-zinc-500">
+    <a routerLink="/montar" class="hover:text-brand-600">Montador</a>
+    <span class="mx-1">/</span>
+    <span class="text-zinc-800">{{ b.name }}</span>
+  </nav>
+
+  <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2 class="text-xl font-bold text-zinc-900">{{ b.name }}</h2>
+      <p class="text-sm text-zinc-500">Atualizado em {{ formatDateTime(b.updatedAt) }}</p>
+    </div>
+    <button
+      type="button"
+      (click)="clone()"
+      [disabled]="cloning()"
+      class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700 disabled:opacity-60"
+    >
+      {{ cloning() ? 'Clonando...' : 'Clonar e editar' }}
+    </button>
+  </div>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+    <div class="rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <ul class="divide-y divide-zinc-100">
+        @for (item of b.items; track item.category) {
+          <li class="flex items-center justify-between gap-3 px-4 py-3">
+            <div class="min-w-0">
+              <p class="text-xs font-medium text-zinc-400">{{ categoryLabel(item.category) }}</p>
+              <a
+                routerLink="/pecas/{{ item.category }}/{{ item.productId }}"
+                class="line-clamp-2 text-sm font-medium text-zinc-800 hover:text-brand-700"
+              >
+                {{ item.name ?? '—' }}
+              </a>
+            </div>
+            <div class="shrink-0 text-right">
+              <p class="text-sm font-bold text-zinc-900">{{ formatBRL(item.price) }}</p>
+              @if (item.storeSlug) {
+                <p class="text-xs text-zinc-400">{{ item.storeSlug }}</p>
+              }
+            </div>
+          </li>
+        } @empty {
+          <li class="px-4 py-3 text-sm text-zinc-500">Build vazio.</li>
+        }
+      </ul>
+      <div class="flex items-center justify-between border-t border-zinc-200 px-4 py-3">
+        <span class="text-sm font-semibold text-zinc-700">Total</span>
+        <span class="text-lg font-bold text-zinc-900">{{ formatBRL(b.totalPrice) }}</span>
+      </div>
+    </div>
+
+    <aside class="space-y-4">
+      <div class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <p class="text-sm font-semibold text-zinc-700">Total por loja</p>
+        @for (store of comparison.value()?.perStore ?? []; track store.storeSlug) {
+          <div class="mt-2 flex items-baseline justify-between text-sm">
+            <span class="text-zinc-600">{{ store.storeName }}</span>
+            <span class="font-medium text-zinc-900">{{ formatBRL(store.total) }}</span>
+          </div>
+          <p class="text-xs text-zinc-400">{{ store.coveredItems }} de {{ store.totalItems }} peças</p>
+        } @empty {
+          <p class="mt-2 text-sm text-zinc-400">Sem ofertas em estoque.</p>
+        }
+      </div>
+
+      @if (b.compatibility.errors.length > 0 || b.compatibility.warnings.length > 0) {
+        <div class="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+          <p class="text-sm font-semibold text-zinc-700">Compatibilidade</p>
+          @for (issue of b.compatibility.errors; track issue.code) {
+            <p class="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-800">
+              {{ issue.message }}
+            </p>
+          }
+          @for (issue of b.compatibility.warnings; track issue.code) {
+            <p class="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+              {{ issue.message }}
+            </p>
+          }
+        </div>
+      }
+    </aside>
+  </div>
+}

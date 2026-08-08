@@ -16,12 +16,14 @@ public static class CatalogEndpoints
 
         products.MapGet("/products", ListProductsAsync);
         products.MapGet("/products/{id:guid}", GetProductAsync);
+        products.MapGet("/products/{id:guid}/prices", GetProductPricesAsync);
         products.MapGet("/health/scrapers", GetScraperHealthAsync);
     }
 
     /// <summary>
     /// GET /api/v1/products?category=&amp;q=&amp;brand=&amp;minPrice=&amp;maxPrice=
-    /// &amp;attrs[socket]=am5&amp;compatibleWith=&lt;buildSlug&gt;&amp;sort=price_asc&amp;limit=&amp;offset=
+    /// &amp;attrs[socket]=am5&amp;compatibleWith=&lt;buildSlug&gt;&amp;showIncompatible=true
+    /// &amp;sort=price_asc&amp;limit=&amp;offset=
     /// </summary>
     private static async Task<IResult> ListProductsAsync(
         AppDbContext db,
@@ -37,7 +39,8 @@ public static class CatalogEndpoints
         [Microsoft.AspNetCore.Mvc.FromQuery] int? limit,
         [Microsoft.AspNetCore.Mvc.FromQuery] int? offset,
         HttpContext http,
-        CancellationToken ct)
+        CancellationToken ct,
+        [Microsoft.AspNetCore.Mvc.FromQuery] bool showIncompatible = false)
     {
         var safeLimit = Math.Clamp(limit ?? 50, 1, 100);
         var safeOffset = Math.Max(offset ?? 0, 0);
@@ -51,19 +54,21 @@ public static class CatalogEndpoints
                 attrs[m.Groups[1].Value] = http.Request.Query[key][0]!;
         }
 
-        // filtro da engine: só produtos que não geram erro novo no build
+        // filtro da engine: só produtos que não geram erro novo no build;
+        // com showIncompatible=true, inclui todos e anexa os motivos (blockedBy).
         HashSet<Guid>? compatibleIds = null;
+        Dictionary<Guid, BlockedByDto[]>? blockedBy = null;
         if (!string.IsNullOrWhiteSpace(compatibleWith))
         {
             if (category is null)
                 return Results.BadRequest("O filtro compatibleWith exige o parâmetro category.");
-            var ids = await GetCompatibleIdsAsync(db, engine, compatibleWith, category, ct);
-            if (ids is null)
+            var result = await EvaluateCompatibilityAsync(db, engine, compatibleWith, category, showIncompatible, ct);
+            if (result is null)
                 return Results.NotFound($"Build '{compatibleWith}' não encontrado.");
-            compatibleIds = ids;
+            (compatibleIds, blockedBy) = result.Value;
         }
 
-        var cacheKey = $"products|{category}|{q}|{brand}|{minPrice}|{maxPrice}|{sort}|{safeLimit}|{safeOffset}|{compatibleWith}";
+        var cacheKey = $"products|{category}|{q}|{brand}|{minPrice}|{maxPrice}|{sort}|{safeLimit}|{safeOffset}|{compatibleWith}|{showIncompatible}";
         if (attrs is not null)
             foreach (var (k, v) in attrs.OrderBy(a => a.Key))
                 cacheKey += $"|{k}={v}";
@@ -117,8 +122,29 @@ public static class CatalogEndpoints
             .Skip(safeOffset)
             .Take(safeLimit)
             .ToListAsync(ct);
+        var total = await projected.CountAsync(ct);
 
-        var json = JsonSerializer.Serialize(new { items, total = await projected.CountAsync(ct) }, Json);
+        object payload = blockedBy is null
+            ? new { items, total }
+            : new
+            {
+                items = items.Select(i => new
+                {
+                    i.Id,
+                    i.Name,
+                    i.Brand,
+                    i.Model,
+                    i.PartNumber,
+                    i.ImageUrl,
+                    i.CategorySlug,
+                    i.Price,
+                    i.StoreCount,
+                    BlockedBy = blockedBy.GetValueOrDefault(i.Id) ?? [],
+                }).ToList(),
+                total,
+            };
+
+        var json = JsonSerializer.Serialize(payload, Json);
         await cache.SetStringAsync(cacheKey, json, new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5),
@@ -166,6 +192,25 @@ public static class CatalogEndpoints
         return product is null ? Results.NotFound() : Results.Ok(product);
     }
 
+    /// <summary>GET /api/v1/products/{id}/prices?days=90 — série diária (menor preço do dia) para o gráfico.</summary>
+    private static async Task<IResult> GetProductPricesAsync(
+        Guid id, AppDbContext db,
+        [Microsoft.AspNetCore.Mvc.FromQuery] int? days,
+        CancellationToken ct)
+    {
+        var safeDays = Math.Clamp(days ?? 90, 1, 365);
+        var since = DateTime.UtcNow.Date.AddDays(-safeDays);
+
+        var series = await db.PriceHistory.AsNoTracking()
+            .Where(h => h.Listing.ProductId == id && h.CollectedAt >= since)
+            .GroupBy(h => h.CollectedAt.Date)
+            .Select(g => new { Date = g.Key, Price = g.Min(h => h.PriceCash) })
+            .OrderBy(x => x.Date)
+            .ToListAsync(ct);
+
+        return Results.Ok(series);
+    }
+
     private static async Task<IResult> GetScraperHealthAsync(AppDbContext db, CancellationToken ct)
     {
         var latest = await db.ScrapeRuns.AsNoTracking()
@@ -190,12 +235,14 @@ public static class CatalogEndpoints
     }
 
     /// <summary>
-    /// Produtos da categoria que, adicionados ao slot do build, não geram novo
-    /// erro da engine (filtragem server-side do seletor — specs.md §7.3).
+    /// Avalia cada produto da categoria contra o build (slot hipotético).
+    /// Sem showIncompatible: Compatible = ids sem erro novo. Com: Reasons =
+    /// motivos (errors) por produto e Compatible = null (lista não filtrada).
     /// null = build inexistente.
     /// </summary>
-    private static async Task<HashSet<Guid>?> GetCompatibleIdsAsync(
-        AppDbContext db, CompatibilityEngine engine, string buildSlug, string categorySlug, CancellationToken ct)
+    private static async Task<(HashSet<Guid>? Compatible, Dictionary<Guid, BlockedByDto[]>? Reasons)?> EvaluateCompatibilityAsync(
+        AppDbContext db, CompatibilityEngine engine, string buildSlug, string categorySlug,
+        bool showIncompatible, CancellationToken ct)
     {
         var build = await BuildSnapshotFactory.LoadBySlugAsync(db, buildSlug, ct);
         if (build is null)
@@ -208,17 +255,26 @@ public static class CatalogEndpoints
             .Select(p => new { p, Attributes = p.Attributes.ToArray() })
             .ToListAsync(ct);
 
-        var compatible = new HashSet<Guid>();
+        HashSet<Guid>? compatible = showIncompatible ? null : new HashSet<Guid>();
+        Dictionary<Guid, BlockedByDto[]>? reasons = showIncompatible ? new Dictionary<Guid, BlockedByDto[]>() : null;
+
         foreach (var c in candidates)
         {
             var part = BuildSnapshotFactory.ToPartSpec(c.p, categorySlug, c.Attributes);
             if (part is null)
                 continue;
 
-            if (!engine.Evaluate(snapshot.With(part)).HasErrors)
-                compatible.Add(c.p.Id);
+            var evaluation = engine.Evaluate(snapshot.With(part));
+            if (!evaluation.HasErrors)
+                compatible?.Add(c.p.Id);
+            else if (reasons is not null)
+                reasons[c.p.Id] = evaluation.Errors
+                    .Select(e => new BlockedByDto(e.Code, e.MessagePtBr))
+                    .ToArray();
         }
 
-        return compatible;
+        return (compatible, reasons);
     }
+
+    internal sealed record BlockedByDto(string Code, string Message);
 }

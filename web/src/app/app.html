@@ -1,8 +1,30 @@
-<header>
-  <h1>OpenPC</h1>
-  <p>Monte seu PC comparando preços entre lojas</p>
+<header class="sticky top-0 z-40 border-b border-zinc-200 bg-white/90 backdrop-blur">
+  <div class="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+    <a routerLink="/" class="flex items-baseline gap-0.5">
+      <h1 class="text-xl font-bold tracking-tight">
+        Open<span class="text-brand-600">PC</span>
+      </h1>
+    </a>
+    <nav class="flex items-center gap-3 text-sm font-medium">
+      <a
+        routerLink="/"
+        routerLinkActive="text-brand-600"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="px-2 py-1 text-zinc-600 hover:text-zinc-900"
+      >
+        Catálogo
+      </a>
+      <a
+        routerLink="/montar"
+        routerLinkActive="bg-brand-700"
+        class="rounded-lg bg-brand-600 px-3 py-1.5 text-white shadow-sm hover:bg-brand-700"
+      >
+        Montar PC
+      </a>
+    </nav>
+  </div>
 </header>
 
-<main>
+<main class="mx-auto max-w-6xl px-4 py-6">
   <router-outlet />
 </main>

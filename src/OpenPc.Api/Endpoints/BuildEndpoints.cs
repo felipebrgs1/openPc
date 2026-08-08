@@ -19,6 +19,7 @@ public static class BuildEndpoints
         builds.MapPut("/{slug}/items/{category}", SetItemAsync);
         builds.MapDelete("/{slug}/items/{category}", RemoveItemAsync);
         builds.MapGet("/{slug}/compatibility", GetCompatibilityAsync);
+        builds.MapGet("/{slug}/price-comparison", GetPriceComparisonAsync);
     }
 
     private static async Task<IResult> CreateBuildAsync(
@@ -136,6 +137,88 @@ public static class BuildEndpoints
             filledSlots = build.Items.Count(i => i.ProductId is not null),
             wattage = new WattageDto(wattage.BaseW, wattage.RecommendedW),
             compatibility = ToDto(evaluation),
+        });
+    }
+
+    /// <summary>
+    /// Otimização de compra (specs.md §6): total por loja (peças que cada loja
+    /// tem em estoque) vs menor preço individual por peça.
+    /// </summary>
+    private static async Task<IResult> GetPriceComparisonAsync(
+        string slug, AppDbContext db, CancellationToken ct)
+    {
+        var build = await BuildSnapshotFactory.LoadBySlugAsync(db, slug, ct);
+        if (build is null)
+            return Results.NotFound();
+
+        var items = build.Items
+            .Where(i => i.ProductId is not null)
+            .OrderBy(i => i.Category.DisplayOrder)
+            .ToArray();
+        var productIds = items.Select(i => i.ProductId!.Value).Distinct().ToArray();
+
+        var prices = productIds.Length == 0
+            ? []
+            : await db.Listings.AsNoTracking()
+                .Where(l => productIds.Contains(l.ProductId) && l.InStock && l.PriceCash != null && l.Store.IsActive)
+                .Select(l => new { l.ProductId, StoreSlug = l.Store.Slug, StoreName = l.Store.Name, l.PriceCash })
+                .GroupBy(l => new { l.ProductId, l.StoreSlug, l.StoreName })
+                .Select(g => new { g.Key.ProductId, g.Key.StoreSlug, g.Key.StoreName, Price = g.Min(x => x.PriceCash) })
+                .ToListAsync(ct);
+
+        var byStore = prices
+            .GroupBy(p => p.StoreSlug)
+            .OrderBy(g => g.Key)
+            .Select(g => new
+            {
+                StoreSlug = g.Key,
+                StoreName = g.First().StoreName,
+                Total = g.Sum(p => p.Price),
+                CoveredItems = g.Select(p => p.ProductId).Distinct().Count(),
+                TotalItems = items.Length,
+            })
+            .ToArray();
+
+        // menor preço individual por peça (mesma regra do totalPrice do build)
+        var best = items.Select(i =>
+        {
+            decimal? price = null;
+            string? store = null;
+            if (i.ListingId is not null && i.Listing is not null && i.Listing.InStock)
+            {
+                price = i.Listing.PriceCash;
+                store = i.Listing.Store?.Slug;
+            }
+            else
+            {
+                var match = prices
+                    .Where(p => p.ProductId == i.ProductId)
+                    .OrderBy(p => p.Price)
+                    .FirstOrDefault();
+                if (match is not null)
+                {
+                    price = match.Price;
+                    store = match.StoreSlug;
+                }
+            }
+
+            return new
+            {
+                Category = i.Category.Slug,
+                i.ProductId,
+                StoreSlug = store,
+                Price = price,
+            };
+        }).ToArray();
+
+        return Results.Ok(new
+        {
+            perStore = byStore,
+            bestIndividual = new
+            {
+                total = best.Where(b => b.Price is not null).Sum(b => b.Price!.Value),
+                items = best,
+            },
         });
     }
 

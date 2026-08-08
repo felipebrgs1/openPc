@@ -140,26 +140,50 @@ os compatíveis); wattage estimado = fórmula documentada (base = TDP CPU+GPU
 
 ---
 
-## M4 — Frontend: catálogo + montador
+## M4 — Frontend: catálogo + montador ✅ (validado 2026-08-08)
 
 **Objetivo:** produto utilizável de ponta a ponta (anônimo).
 
-- [ ] Design system mínimo com Tailwind (decidido: sem Material) + tokens de
-      cor/espaçamento
-- [ ] `/` home, `/pecas/:category`, `/pecas/:category/:id` (detalhe + ofertas
-      por loja + gráfico de histórico)
-- [ ] **`/montar`**: 8 slots, seletor filtrado por compatibilidade, toggle
-      "mostrar incompatíveis" com motivo inline
-- [ ] Painel do build: preço total (menor preço × por loja), barra de wattage,
-      lista de errors/warnings acionáveis
-- [ ] `/build/:slug` compartilhável (anônimo, slug na URL)
-- [ ] Estado do build com signals + persistência em `localStorage`
-- [ ] Responsivo (mobile-first no montador)
-- [ ] Formatação BRL, datas pt-BR, SEO básico (meta tags por rota)
+**Resultado: fluxo completo validado no browser com dados reais — usuário
+monta um PC (7600X + placa AM4 → erro `CPU_SOCKET_MISMATCH` no painel; toggle
+"mostrar incompatíveis" mostra o motivo inline; troca por placa AM5 limpa os
+erros), vê total por loja (Kabum 2/2 peças) e compartilha o link; clone do
+build compartilhado volta para o montador.**
 
-**Critério de aceite:** usuário anônimo monta um PC completo, vê
-incompatibilidades bloqueadas, preço total por loja e compartilha o link.
-Teste manual de fluxo completo no browser.
+- [x] Design system mínimo com Tailwind v4 + tokens de cor (`@theme` brand/acento)
+- [x] `/` home, `/pecas/:category`, `/pecas/:category/:id` (detalhe + ofertas
+      por loja + gráfico de histórico com fallback)
+- [x] **`/montar`**: 8 slots, seletor filtrado por compatibilidade, toggle
+      "mostrar incompatíveis" com motivo inline (busca no seletor incluída)
+- [x] Painel do build: preço total (menor preço × por loja), barra de wattage,
+      lista de errors/warnings acionáveis (com nomes das peças)
+- [x] `/build/:slug` compartilhável (anônimo, slug na URL) + "clonar e editar"
+- [x] Estado do build com signals + persistência do slug em `localStorage`
+- [x] Responsivo (mobile-first: grids `sm:`/`lg:`, modal bottom-sheet no mobile)
+- [x] Formatação BRL (`Intl`), datas pt-BR, SEO básico (title + meta por rota)
+
+**Critério de aceite:** ✅ usuário anônimo monta um PC completo, vê
+incompatibilidades bloqueadas (com motivo inline), preço total por loja e
+compartilha o link. Teste manual de fluxo completo no browser (headless
+Chromium, dados reais).
+
+**Achados operacionais (registrados no código/docs):**
+- Endpoints novos na API para o front: `GET /products/{id}/prices` (série
+  diária p/ sparkline), `GET /builds/{slug}/price-comparison` (total por loja
+  + menor preço individual — specs.md §6) e `showIncompatible=true` +
+  `blockedBy` em `GET /products` (motivo inline do toggle).
+- Tailwind v4: o builder do Angular **só lê `postcss.config.json`** — o
+  `postcss.config.js` é ignorado em silêncio (tema era emitido sem as
+  utilities). Resolvido com JSON + `@source` explícito em `styles.css`.
+- Seletor de peças ganhou busca (o filtro da engine escondia peças relevantes
+  além da página de 100 mais baratas).
+- Sparkline: histórico ainda esparso (scrapes todos do mesmo dia → 1 ponto) —
+  componente renderiza fallback "sem histórico"; gráfico real chega com a
+  agregação do M6.
+- ~435 placas-mãe de Pichau/Terabyte ingeridas antes do `ExtractMotherboard`
+  seguem sem specs e passam no filtro como compatíveis (conservador por
+  design) — corrigido por re-scrape futuro (regra agents.md: sem scraping
+  sem pedido).
 
 ---
 
