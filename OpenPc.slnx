@@ -7,5 +7,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/OpenPc.Scraper.Tests/OpenPc.Scraper.Tests.csproj" />
+    <Project Path="tests/OpenPc.Domain.Tests/OpenPc.Domain.Tests.csproj" />
   </Folder>
 </Solution>

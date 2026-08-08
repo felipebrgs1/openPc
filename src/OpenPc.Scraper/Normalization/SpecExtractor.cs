@@ -15,7 +15,7 @@ public static partial class SpecExtractor
         var specs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var text = specText ?? "";
 
-        Set(specs, "socket", (FirstMatch(text, Socket()) ?? FirstMatch(title, Socket()))?.ToLowerInvariant());
+        Set(specs, "socket", NormalizeSocket(FirstMatch(text, Socket()) ?? FirstMatch(title, Socket())));
         Set(specs, "tdp_w", FirstMatch(text, Tdp()) ?? FirstMatch(title, Tdp()));
         Set(specs, "cores", FirstMatch(title, Cores()) ?? FirstMatch(text, Cores()));
         Set(specs, "threads", FirstMatch(title, Threads()) ?? FirstMatch(text, Threads()));
@@ -36,6 +36,56 @@ public static partial class SpecExtractor
         Set(specs, "power_connectors", FirstMatch(text, PowerConnectors()));
 
         return specs;
+    }
+
+    /// <summary>
+    /// Specs essenciais de placa-mãe a partir do título (as 3 lojas embutem
+    /// socket, chipset, formato e DDR no nome). Chaves do contrato §3.2 que
+    /// alimentam a engine M3.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> ExtractMotherboard(string title)
+    {
+        var specs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        Set(specs, "socket", NormalizeSocket(FirstMatch(title, Socket())));
+        Set(specs, "chipset", NormalizeChipset(FirstMatch(title, Chipset())));
+        Set(specs, "form_factor", NormalizeFormFactor(FirstMatch(title, FormFactor())));
+        Set(specs, "memory_type", FirstMatch(title, MemoryType())?.ToLowerInvariant());
+
+        return specs;
+    }
+
+    /// <summary>
+    /// Socket canônico: minúsculas e sem espaço ("LGA 1700" → "lga1700") —
+    /// a engine compara o valor bruto; "lga 1700" vs "lga1700" não pode
+    /// divergir na mesma plataforma.
+    /// </summary>
+    private static string? NormalizeSocket(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.ToLowerInvariant().Replace(" ", "");
+
+    /// <summary>Contrato da engine (§3.2): atx | matx | itx | eatx — Mini-ITX vira itx.</summary>
+    private static string? NormalizeFormFactor(string? value) => value?.ToLowerInvariant() switch
+    {
+        "mini-itx" or "miniitx" => "itx",
+        "m-atx" or "matx" or "micro-atx" or "microatx" => "matx",
+        "e-atx" or "eatx" => "eatx",
+        "atx" => "atx",
+        "itx" => "itx",
+        _ => value?.ToLowerInvariant(),
+    };
+
+    private static string? NormalizeChipset(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var s = value.ToLowerInvariant().Replace(" ", "");
+        if (s.StartsWith("amd", StringComparison.Ordinal))
+            s = s[3..];
+        else if (s.StartsWith("intel", StringComparison.Ordinal))
+            s = s[5..];
+
+        return s.Length == 0 ? null : s;
     }
 
     private static void Set(IDictionary<string, string> specs, string key, string? value)
@@ -70,6 +120,12 @@ public static partial class SpecExtractor
 
     [GeneratedRegex(@"\b(DDR[45])\b", RegexOptions.IgnoreCase)]
     private static partial Regex MemoryType();
+
+    [GeneratedRegex(@"(?<![A-Za-z0-9])(?:AMD|Intel\s+)?([ABXHZ]\d{3})", RegexOptions.IgnoreCase)]
+    private static partial Regex Chipset();
+
+    [GeneratedRegex(@"\b(M(?:icro)?-?ATX|Mini-?ITX|E-?ATX|ATX|ITX)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex FormFactor();
 
     [GeneratedRegex(@"(\d{2,3})\s*GB", RegexOptions.IgnoreCase)]
     private static partial Regex GpuMemoryGb();

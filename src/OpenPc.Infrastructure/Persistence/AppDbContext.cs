@@ -14,6 +14,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<ScrapeJob> ScrapeJobs => Set<ScrapeJob>();
     public DbSet<ScrapeRun> ScrapeRuns => Set<ScrapeRun>();
     public DbSet<ProductMatchCandidate> MatchCandidates => Set<ProductMatchCandidate>();
+    public DbSet<Build> Builds => Set<Build>();
+    public DbSet<BuildItem> BuildItems => Set<BuildItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

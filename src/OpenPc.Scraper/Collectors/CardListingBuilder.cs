@@ -33,6 +33,7 @@ public static class CardListingBuilder
         {
             "cpu" => SpecExtractor.ExtractCpu(name, null),
             "gpu" => SpecExtractor.ExtractGpu(name, null),
+            "motherboard" => SpecExtractor.ExtractMotherboard(name),
             _ => new Dictionary<string, string>(),
         };
 

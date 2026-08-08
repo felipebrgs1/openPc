@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OpenPc.Domain.Compatibility;
+using OpenPc.Infrastructure.Compatibility;
 using OpenPc.Infrastructure.Persistence;
 
 namespace OpenPc.Infrastructure;
@@ -15,6 +17,17 @@ public static class DependencyInjection
                 "Connection string 'Default' não configurada.");
 
         services.AddDbContext<AppDbContext>(o => o.UseNpgsql(connectionString));
+
+        // Engine de compatibilidade (M3): seed curado + regras + executor.
+        services.AddSingleton(CompatibilitySeedLoader.Load());
+        services.AddSingleton<CompatibilityEngine>();
+        foreach (var type in typeof(ICompatibilityRule).Assembly.GetTypes()
+            .Where(t => t is { IsAbstract: false, IsInterface: false }
+                        && typeof(ICompatibilityRule).IsAssignableFrom(t)))
+        {
+            services.AddSingleton(typeof(ICompatibilityRule), type);
+        }
+
         return services;
     }
 }

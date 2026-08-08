@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using OpenPc.Domain.Compatibility;
 using OpenPc.Infrastructure.Persistence;
 
 namespace OpenPc.Api.Endpoints;
@@ -20,17 +21,19 @@ public static class CatalogEndpoints
 
     /// <summary>
     /// GET /api/v1/products?category=&amp;q=&amp;brand=&amp;minPrice=&amp;maxPrice=
-    /// &amp;attrs[socket]=am5&amp;sort=price_asc&amp;limit=&amp;offset=
+    /// &amp;attrs[socket]=am5&amp;compatibleWith=&lt;buildSlug&gt;&amp;sort=price_asc&amp;limit=&amp;offset=
     /// </summary>
     private static async Task<IResult> ListProductsAsync(
         AppDbContext db,
         IDistributedCache cache,
+        CompatibilityEngine engine,
         [Microsoft.AspNetCore.Mvc.FromQuery] string? category,
         [Microsoft.AspNetCore.Mvc.FromQuery] string? q,
         [Microsoft.AspNetCore.Mvc.FromQuery] string? brand,
         [Microsoft.AspNetCore.Mvc.FromQuery] decimal? minPrice,
         [Microsoft.AspNetCore.Mvc.FromQuery] decimal? maxPrice,
         [Microsoft.AspNetCore.Mvc.FromQuery] string? sort,
+        [Microsoft.AspNetCore.Mvc.FromQuery] string? compatibleWith,
         [Microsoft.AspNetCore.Mvc.FromQuery] int? limit,
         [Microsoft.AspNetCore.Mvc.FromQuery] int? offset,
         HttpContext http,
@@ -48,7 +51,19 @@ public static class CatalogEndpoints
                 attrs[m.Groups[1].Value] = http.Request.Query[key][0]!;
         }
 
-        var cacheKey = $"products|{category}|{q}|{brand}|{minPrice}|{maxPrice}|{sort}|{safeLimit}|{safeOffset}";
+        // filtro da engine: só produtos que não geram erro novo no build
+        HashSet<Guid>? compatibleIds = null;
+        if (!string.IsNullOrWhiteSpace(compatibleWith))
+        {
+            if (category is null)
+                return Results.BadRequest("O filtro compatibleWith exige o parâmetro category.");
+            var ids = await GetCompatibleIdsAsync(db, engine, compatibleWith, category, ct);
+            if (ids is null)
+                return Results.NotFound($"Build '{compatibleWith}' não encontrado.");
+            compatibleIds = ids;
+        }
+
+        var cacheKey = $"products|{category}|{q}|{brand}|{minPrice}|{maxPrice}|{sort}|{safeLimit}|{safeOffset}|{compatibleWith}";
         if (attrs is not null)
             foreach (var (k, v) in attrs.OrderBy(a => a.Key))
                 cacheKey += $"|{k}={v}";
@@ -67,6 +82,9 @@ public static class CatalogEndpoints
         if (attrs is not null)
             foreach (var (key, value) in attrs)
                 query = query.Where(p => p.Attributes.Any(a => a.Key == key && a.ValueText == value));
+
+        if (compatibleIds is not null)
+            query = query.Where(p => compatibleIds.Contains(p.Id));
 
         var projected = query.Select(p => new
         {
@@ -169,5 +187,38 @@ public static class CatalogEndpoints
             .ToListAsync(ct);
 
         return Results.Ok(latest);
+    }
+
+    /// <summary>
+    /// Produtos da categoria que, adicionados ao slot do build, não geram novo
+    /// erro da engine (filtragem server-side do seletor — specs.md §7.3).
+    /// null = build inexistente.
+    /// </summary>
+    private static async Task<HashSet<Guid>?> GetCompatibleIdsAsync(
+        AppDbContext db, CompatibilityEngine engine, string buildSlug, string categorySlug, CancellationToken ct)
+    {
+        var build = await BuildSnapshotFactory.LoadBySlugAsync(db, buildSlug, ct);
+        if (build is null)
+            return null;
+
+        var snapshot = BuildSnapshotFactory.FromBuild(build);
+
+        var candidates = await db.Products.AsNoTracking()
+            .Where(p => p.Category.Slug == categorySlug)
+            .Select(p => new { p, Attributes = p.Attributes.ToArray() })
+            .ToListAsync(ct);
+
+        var compatible = new HashSet<Guid>();
+        foreach (var c in candidates)
+        {
+            var part = BuildSnapshotFactory.ToPartSpec(c.p, categorySlug, c.Attributes);
+            if (part is null)
+                continue;
+
+            if (!engine.Evaluate(snapshot.With(part)).HasErrors)
+                compatible.Add(c.p.Id);
+        }
+
+        return compatible;
     }
 }

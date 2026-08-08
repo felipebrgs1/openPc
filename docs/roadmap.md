@@ -97,25 +97,46 @@ Terabyte**; `scrape_runs` saudáveis por loja.
 
 ---
 
-## M3 — Engine de compatibilidade
+## M3 — Engine de compatibilidade ✅ (validado 2026-08-08)
 
 **Objetivo:** coração do produto, com cobertura de testes alta.
 
-- [ ] `BuildSnapshot` + `ICompatibilityRule` + executor (§4.1)
-- [ ] Todas as regras **Error** da tabela §4.2
-- [ ] Regras **Warning** prioritárias: `PSU_WATTAGE_LOW`, `NO_GPU_NO_IGPU`,
+**Resultado: 16 regras (12 erro + 4 warning) cobertas por 148 testes (106
+domain + 42 scraper); aceite end-to-end validado na API com dados reais
+(smoke): Ryzen AM5 + placa AM4 → `CPU_SOCKET_MISMATCH`; `compatibleWith`
+excluiu 100% das 163 placas AM4 do seletor.**
+
+- [x] `BuildSnapshot` + `ICompatibilityRule` + executor (§4.1)
+- [x] Todas as regras **Error** da tabela §4.2
+- [x] Regras **Warning** prioritárias: `PSU_WATTAGE_LOW`, `NO_GPU_NO_IGPU`,
       `BIOS_UPDATE_NEEDED`, `RAM_SPEED_CAPPED`
-- [ ] Seed curado `compatibility.json` (matriz socket/chipset/BIOS,
-      gerações AM4/AM5/LGA1700/LGA1851)
-- [ ] Endpoints: `POST /builds`, `PUT/DELETE .../items`,
+- [x] Seed curado `compatibility.json` (matriz socket/chipset/BIOS,
+      gerações AM4/AM5/LGA1700/LGA1851) — 22 chipsets
+- [x] Endpoints: `POST /builds`, `GET /builds/{slug}`, `PUT/DELETE .../items`,
       `GET .../compatibility`, filtro `compatibleWith` em `GET /products`
-- [ ] Estimador de wattage (TDP CPU+GPU+overhead) com margem recomendada
-- [ ] Testes de unidade: cada regra com casos positivo/negativo/borda
+- [x] Estimador de wattage (TDP CPU+GPU+overhead ×1.4) com margem recomendada
+- [x] Testes de unidade: cada regra com casos positivo/negativo/borda
       (ex: GPU com comprimento exatamente igual ao limite do gabinete)
 
-**Critério de aceite:** build com Ryzen AM5 + placa AM4 → erro
-`CPU_SOCKET_MISMATCH`; seletor de placa-mãe filtrado por socket; wattage
-estimado bate com calculadoras de referência (±10%).
+**Critério de aceite:** ✅ build com Ryzen AM5 + placa AM4 → erro
+`CPU_SOCKET_MISMATCH`; seletor de placa-mãe filtrado por socket (0 AM4 entre
+os compatíveis); wattage estimado = fórmula documentada (base = TDP CPU+GPU
++ 100 W, recomendado ×1.4 — alinhado com calculadoras ±10%).
+
+**Achados operacionais (registrados no código/docs):**
+- Scraper passou a extrair specs de placa-mãe do título (`ExtractMotherboard`:
+  socket, chipset, form factor, DDR) — necessário para o seletor filtrado por
+  socket ter dados reais. Ficha técnica completa (página de produto) segue
+  como job de enrichment futuro (verde no backlog).
+- Bug corrigido: `PUT /builds/{slug}/items/{category}` com item existente não
+  persistia — build carregado com `AsNoTracking`, mutação em entidade detached
+  era silenciosamente descartada. Item agora é carregado tracked.
+- Normalização de socket: "LGA 1700" (com espaço) vira `lga1700` — a engine
+  compara o valor bruto e espaços divergentes gerariam erro falso.
+- Placa sem socket/chipset na base passa no filtro (spec desconhecida ≠
+  incompatível) — comportamento conservador por design (§4.4).
+- Regras com dados insuficientes retornam nulo (nunca erro falso); a matriz
+  BIOS é editorial aproximada — revisar a cada geração nova.
 
 ---
 

@@ -32,6 +32,7 @@ try
     app.UseCors();
     app.MapOpenApi();
     app.MapCatalogEndpoints();
+    app.MapBuildEndpoints();
 
     app.MapGet("/api/v1/health", async (AppDbContext db) =>
     {

@@ -1,0 +1,79 @@
+{
+  "$comment": "Seed editorial de compatibilidade (docs/specs.md §4.4): matriz chipset -> gerações de CPU suportadas. Dado curado no repo — o scraper NÃO preenche isto. 'bios' null = suportada nativamente; string = exige BIOS mínima (warning BIOS_UPDATE_NEEDED). Geração fora da lista = erro CPU_CHIPSET_UNSUPPORTED. Revisar a cada geração nova de hardware.",
+  "chipsets": [
+    { "name": "a320", "socket": "am4", "generations": [
+      { "id": "zen1", "bios": null },
+      { "id": "zen2", "bios": null },
+      { "id": "zen3", "bios": "AGESA ComboAM4v2 PI 1.2.0.7" } ] },
+    { "name": "b350", "socket": "am4", "generations": [
+      { "id": "zen1", "bios": null },
+      { "id": "zen2", "bios": null },
+      { "id": "zen3", "bios": "AGESA ComboAM4v2 PI 1.2.0.7" } ] },
+    { "name": "x370", "socket": "am4", "generations": [
+      { "id": "zen1", "bios": null },
+      { "id": "zen2", "bios": null },
+      { "id": "zen3", "bios": "AGESA ComboAM4v2 PI 1.2.0.7" } ] },
+    { "name": "b450", "socket": "am4", "generations": [
+      { "id": "zen1", "bios": null },
+      { "id": "zen2", "bios": null },
+      { "id": "zen3", "bios": "AGESA ComboAM4v2 PI 1.2.0.7" } ] },
+    { "name": "x470", "socket": "am4", "generations": [
+      { "id": "zen1", "bios": null },
+      { "id": "zen2", "bios": null },
+      { "id": "zen3", "bios": "AGESA ComboAM4v2 PI 1.2.0.7" } ] },
+    { "name": "a520", "socket": "am4", "generations": [
+      { "id": "zen2", "bios": null },
+      { "id": "zen3", "bios": null } ] },
+    { "name": "b550", "socket": "am4", "generations": [
+      { "id": "zen2", "bios": null },
+      { "id": "zen3", "bios": null } ] },
+    { "name": "x570", "socket": "am4", "generations": [
+      { "id": "zen2", "bios": null },
+      { "id": "zen3", "bios": null } ] },
+    { "name": "a620", "socket": "am5", "generations": [
+      { "id": "zen4", "bios": null },
+      { "id": "zen5", "bios": "AGESA 1.2.0.2" } ] },
+    { "name": "b650", "socket": "am5", "generations": [
+      { "id": "zen4", "bios": null },
+      { "id": "zen5", "bios": "AGESA 1.2.0.2" } ] },
+    { "name": "x670", "socket": "am5", "generations": [
+      { "id": "zen4", "bios": null },
+      { "id": "zen5", "bios": "AGESA 1.2.0.2" } ] },
+    { "name": "b840", "socket": "am5", "generations": [
+      { "id": "zen4", "bios": null },
+      { "id": "zen5", "bios": null } ] },
+    { "name": "x870", "socket": "am5", "generations": [
+      { "id": "zen4", "bios": null },
+      { "id": "zen5", "bios": null } ] },
+    { "name": "h610", "socket": "lga1700", "generations": [
+      { "id": "alder-lake", "bios": null },
+      { "id": "raptor-lake", "bios": null },
+      { "id": "raptor-lake-refresh", "bios": "BIOS 2402" } ] },
+    { "name": "b660", "socket": "lga1700", "generations": [
+      { "id": "alder-lake", "bios": null },
+      { "id": "raptor-lake", "bios": null },
+      { "id": "raptor-lake-refresh", "bios": "BIOS 2402" } ] },
+    { "name": "h670", "socket": "lga1700", "generations": [
+      { "id": "alder-lake", "bios": null },
+      { "id": "raptor-lake", "bios": null },
+      { "id": "raptor-lake-refresh", "bios": "BIOS 2402" } ] },
+    { "name": "z690", "socket": "lga1700", "generations": [
+      { "id": "alder-lake", "bios": null },
+      { "id": "raptor-lake", "bios": null },
+      { "id": "raptor-lake-refresh", "bios": "BIOS 2402" } ] },
+    { "name": "b760", "socket": "lga1700", "generations": [
+      { "id": "alder-lake", "bios": null },
+      { "id": "raptor-lake", "bios": null },
+      { "id": "raptor-lake-refresh", "bios": null } ] },
+    { "name": "z790", "socket": "lga1700", "generations": [
+      { "id": "alder-lake", "bios": null },
+      { "id": "raptor-lake", "bios": null },
+      { "id": "raptor-lake-refresh", "bios": null } ] },
+    { "name": "h810", "socket": "lga1851", "generations": [
+      { "id": "arrow-lake", "bios": null } ] },
+    { "name": "b860", "socket": "lga1851", "generations": [
+      { "id": "arrow-lake", "bios": null } ] },
+    { "name": "z890", "socket": "lga1851", "generations": [
+      { "id": "arrow-lake", "bios": null } ] }
+  ]
+}

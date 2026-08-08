@@ -76,6 +76,7 @@ public sealed partial class KabumCollector(HttpClient http, ILogger<KabumCollect
         {
             "cpu" => SpecExtractor.ExtractCpu(p.Title, null),
             "gpu" => SpecExtractor.ExtractGpu(p.Title, null),
+            "motherboard" => SpecExtractor.ExtractMotherboard(p.Title),
             _ => new Dictionary<string, string>(),
         };
 
