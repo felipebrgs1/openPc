@@ -50,6 +50,8 @@ try
     app.MapOpenApi();
     app.MapCatalogEndpoints();
     app.MapBuildEndpoints();
+    app.MapOffersEndpoints();
+    app.MapAlertEndpoints();
 
     app.MapGet("/api/v1/health", async (AppDbContext db) =>
     {

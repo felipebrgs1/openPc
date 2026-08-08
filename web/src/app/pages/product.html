@@ -96,6 +96,58 @@
     <app-sparkline [points]="prices.value() ?? []" />
   </div>
 
+  <div class="card mt-6 p-5">
+    <p class="text-sm font-semibold text-zinc-700">Avisar quando o preço cair</p>
+    <p class="mt-1 text-sm text-zinc-500">
+      Receba um e-mail quando o menor preço em estoque chegar ao seu alvo.
+    </p>
+
+    @if (alertSent(); as sent) {
+      <div class="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <p class="font-semibold">Alerta criado!</p>
+        <p class="mt-1">
+          Enviamos um e-mail de confirmação para <b>{{ sent.email }}</b>. Confirme
+          pelo link para ativar o alerta em <b>{{ formatBRL(sent.targetPrice) }}</b>.
+        </p>
+      </div>
+    } @else {
+      <div class="mt-4 flex flex-wrap items-end gap-3">
+        <label class="min-w-0 flex-1">
+          <span class="text-xs font-medium text-zinc-500">Seu e-mail</span>
+          <input
+            type="email"
+            [value]="alertEmail()"
+            (input)="alertEmail.set(($any($event.target).value))"
+            placeholder="voce@email.com"
+            class="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-500"
+          />
+        </label>
+        <label class="w-36">
+          <span class="text-xs font-medium text-zinc-500">Preço alvo</span>
+          <input
+            type="text"
+            inputmode="decimal"
+            [value]="alertTarget()"
+            (input)="alertTarget.set(($any($event.target).value))"
+            placeholder="R$ 0,00"
+            class="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-500"
+          />
+        </label>
+        <button
+          type="button"
+          (click)="createAlert()"
+          [disabled]="alertSending()"
+          class="btn-outline !py-2"
+        >
+          {{ alertSending() ? 'Criando...' : 'Criar alerta' }}
+        </button>
+      </div>
+      @if (alertError()) {
+        <p class="mt-2 text-sm text-red-600">{{ alertError() }}</p>
+      }
+    }
+  </div>
+
   @if (p.specs.length > 0) {
     <div class="card mt-6 overflow-hidden">
       <p class="border-b border-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700">

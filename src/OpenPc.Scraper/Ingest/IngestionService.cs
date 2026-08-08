@@ -54,6 +54,15 @@ public sealed class IngestionService(AppDbContext db, ILogger<IngestionService> 
         var newListings = 0;
         var newCandidates = 0;
 
+        // produtos cujo menor preço em estoque caiu neste run — alvo do
+        // disparo de alertas de preço (M6)
+        var priceDropProductIds = new HashSet<Guid>();
+        var minPriceByProduct = await db.Listings.AsNoTracking()
+            .Where(l => l.InStock && l.PriceCash != null)
+            .GroupBy(l => l.ProductId)
+            .Select(g => new { ProductId = g.Key, Min = g.Min(l => l.PriceCash) })
+            .ToDictionaryAsync(x => x.ProductId, x => x.Min, ct);
+
         // categorias com padrão de match key conhecido: ausência de âncora
         // sinaliza problema; nas demais, produtos únicos são o caso normal.
         var expectAnchor = categorySlug is "cpu" or "gpu";
@@ -138,6 +147,15 @@ public sealed class IngestionService(AppDbContext db, ILogger<IngestionService> 
             listing.Thumbnail ??= item.Thumbnail;
             listing.LastSeenAt = DateTime.UtcNow;
 
+            // queda de preço? registra para o disparo de alertas (M6):
+            // compara com o menor preço em estoque conhecido do produto.
+            if (item.InStock && item.PriceCash is { } newPrice
+                && minPriceByProduct.TryGetValue(product.Id, out var prevMin)
+                && newPrice < prevMin)
+            {
+                priceDropProductIds.Add(product.Id);
+            }
+
             // preço mudou? append ao histórico (append-only)
             var last = await db.PriceHistory
                 .Where(h => h.ListingId == listing.Id)
@@ -163,7 +181,7 @@ public sealed class IngestionService(AppDbContext db, ILogger<IngestionService> 
             "Ingestão {Store}/{Category}: {Items} itens, {NewProducts} produtos novos, {NewListings} listings novos, {Candidates} na fila",
             store.Slug, categorySlug, items.Count, newProducts, newListings, newCandidates);
 
-        return new IngestResult(items.Count, newProducts, newListings, newCandidates);
+        return new IngestResult(items.Count, newProducts, newListings, newCandidates, priceDropProductIds);
     }
 
     private Product? ResolveProduct(
@@ -261,4 +279,9 @@ public sealed class IngestionService(AppDbContext db, ILogger<IngestionService> 
     }
 }
 
-public sealed record IngestResult(int ItemsFound, int NewProducts, int NewListings, int NewCandidates);
+public sealed record IngestResult(
+    int ItemsFound,
+    int NewProducts,
+    int NewListings,
+    int NewCandidates,
+    IReadOnlyCollection<Guid> PriceDropProductIds);

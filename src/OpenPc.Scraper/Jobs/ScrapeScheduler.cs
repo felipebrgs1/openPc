@@ -22,6 +22,18 @@ public sealed class ScrapeScheduler(
             .ToListAsync(ct);
 
         var scheduler = await factory.GetScheduler(ct);
+
+        // Job fixo de agregação diária de preços (M6) — não é scraping.
+        await scheduler.ScheduleJob(
+            JobBuilder.Create<PriceAggregationJob>()
+                .WithIdentity("price-aggregation")
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("price-aggregation-trigger")
+                .WithCronSchedule(PriceAggregationJob.Cron)
+                .Build(),
+            ct);
+
         foreach (var job in jobs)
         {
             var key = new JobKey($"job-{job.Id:N}");

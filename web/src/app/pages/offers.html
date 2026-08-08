@@ -1,0 +1,97 @@
+<section class="mx-auto max-w-5xl">
+  <nav class="text-sm text-zinc-500">
+    <a routerLink="/" class="hover:text-brand-600">Catálogo</a>
+    <span class="mx-1">/</span>
+    <span class="text-zinc-800">Ofertas</span>
+  </nav>
+
+  <div class="mt-3 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-zinc-900">Ofertas e quedas de preço</h1>
+      <p class="mt-1 text-sm text-zinc-500">
+        Os maiores descontos em hardware — atualizados a cada coleta.
+      </p>
+    </div>
+
+    <div class="flex rounded-lg border border-zinc-200 p-0.5 text-sm">
+      <button
+        type="button"
+        (click)="switchPeriod('24h')"
+        class="rounded-md px-3 py-1.5 font-medium transition"
+        [class.bg-brand-600]="period() === '24h'"
+        [class.text-white]="period() === '24h'"
+        [class.text-zinc-600]="period() !== '24h'"
+      >
+        Últimas 24h
+      </button>
+      <button
+        type="button"
+        (click)="switchPeriod('7d')"
+        class="rounded-md px-3 py-1.5 font-medium transition"
+        [class.bg-brand-600]="period() === '7d'"
+        [class.text-white]="period() === '7d'"
+        [class.text-zinc-600]="period() !== '7d'"
+      >
+        Últimos 7 dias
+      </button>
+    </div>
+  </div>
+
+  @if (offers.isLoading()) {
+    <p class="mt-6 text-sm text-zinc-500">Carregando ofertas...</p>
+  } @else if (offers.error()) {
+    <p class="mt-6 text-sm text-red-600">
+      Não foi possível carregar as ofertas. Verifique se a API está no ar.
+    </p>
+  } @else if (offers.value()!.items.length === 0) {
+    <div class="card mt-6 p-8 text-center">
+      <p class="text-lg font-semibold text-zinc-800">Nenhuma queda no período</p>
+      <p class="mx-auto mt-2 max-w-md text-sm text-zinc-500">
+        Quando o histórico de preços tiver alguns dias de coleta, as maiores
+        quedas aparecem aqui.
+      </p>
+    </div>
+  } @else {
+    <ul class="mt-6 grid gap-3 sm:grid-cols-2">
+      @for (offer of offers.value()!.items; track offer.product.id) {
+        <li class="card flex items-center gap-4 p-4 transition hover:border-brand-400 hover:shadow">
+          <a routerLink="/pecas/{{ offer.product.categorySlug }}/{{ offer.product.id }}" class="flex min-w-0 flex-1 items-center gap-4">
+            <span class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-zinc-50">
+              @if (offer.product.imageUrl) {
+                <img [src]="offer.product.imageUrl" [alt]="offer.product.name" class="h-full w-full object-contain" />
+              } @else {
+                <span class="text-[10px] text-zinc-400">Sem img</span>
+              }
+            </span>
+            <span class="min-w-0">
+              <span class="block truncate font-semibold text-zinc-800 group-hover:text-brand-700">
+                {{ offer.product.name }}
+              </span>
+              <span class="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                <span class="font-bold text-emerald-600">
+                  -{{ (dropPercent(offer)! * 100).toFixed(1) }}%
+                </span>
+                @if (offer.lowestInDays > 0) {
+                  <span class="rounded-full bg-brand-50 px-2 py-0.5 font-medium text-brand-700">
+                    Menor preço em {{ offer.lowestInDays }} {{ offer.lowestInDays === 1 ? 'dia' : 'dias' }}
+                  </span>
+                }
+                @if (offer.isAnomaly) {
+                  <span class="rounded-full bg-red-50 px-2 py-0.5 font-medium text-red-600">
+                    Queda anômala
+                  </span>
+                }
+              </span>
+            </span>
+          </a>
+          <span class="shrink-0 text-right">
+            <span class="block text-lg font-bold text-zinc-900">{{ formatBRL(offer.currentPrice) }}</span>
+            <span class="block text-xs text-zinc-400 line-through">
+              {{ formatBRL(period() === '24h' ? offer.price24hAgo : offer.price7dAgo) }}
+            </span>
+          </span>
+        </li>
+      }
+    </ul>
+  }
+</section>

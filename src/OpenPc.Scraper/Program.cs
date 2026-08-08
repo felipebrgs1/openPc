@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using OpenPc.Infrastructure.Persistence;
 using OpenPc.Infrastructure.Persistence.Seed;
+using OpenPc.Infrastructure.Prices;
 using OpenPc.Scraper.Collectors;
+using OpenPc.Scraper.Email;
 using OpenPc.Scraper.Ingest;
 using OpenPc.Scraper.Jobs;
 using OpenPc.Scraper.Normalization;
@@ -30,6 +32,7 @@ try
         ?? throw new InvalidOperationException("Connection string 'Default' não configurada.");
 
     builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(conn));
+    builder.Services.AddScoped<PriceAggregationService>();
     builder.Services.AddHttpClient<KabumCollector>(c => c.DefaultRequestHeaders.UserAgent.ParseAdd(
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"));
     builder.Services.AddHttpClient<ScrapeAlertService>(c => c.Timeout = TimeSpan.FromSeconds(5));
@@ -40,6 +43,8 @@ try
     builder.Services.AddSingleton<IStoreCollector, KabumCollector>();
     builder.Services.AddSingleton<IStoreCollector, PichauCollector>();
     builder.Services.AddSingleton<IStoreCollector, TerabyteCollector>();
+    builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
+    builder.Services.AddSingleton<PriceAlertService>();
     builder.Services.AddQuartz(q => { });
     builder.Services.AddHostedService<ScrapeScheduler>();
 
@@ -61,6 +66,37 @@ try
         var store = args.Length > 1 ? args[1] : null;
         var category = args.Length > 2 ? args[2] : null;
         await collection.RunAllEnabledAsync(store, category, CancellationToken.None);
+        Log.CloseAndFlush();
+        return;
+    }
+
+    if (args.Length > 0 && args[0] == "alerts-check")
+    {
+        // Verifica/dispara alertas de preço de um produto manualmente (não
+        // coleta nada). Uso: alerts-check <productId> — útil para validar o
+        // disparo com preço simulado em staging (M6).
+        if (args.Length < 2 || !Guid.TryParse(args[1], out var alertProductId))
+        {
+            Log.Error("alerts-check exige um productId (GUID)");
+            Log.CloseAndFlush();
+            return;
+        }
+        await using var scope = host.Services.CreateAsyncScope();
+        var alerts = scope.ServiceProvider.GetRequiredService<PriceAlertService>();
+        var sent = await alerts.CheckProductAsync(alertProductId, CancellationToken.None);
+        Log.Information("alerts-check {ProductId}: {Sent} alertas disparados", alertProductId, sent);
+        Log.CloseAndFlush();
+        return;
+    }
+
+    if (args.Length > 0 && args[0] == "aggregate-prices")
+    {
+        // Roda a agregação price_daily + retenção manualmente (não coleta
+        // nada — só consolida o histórico existente). Uso: aggregate-prices [dias]
+        var days = args.Length > 1 && int.TryParse(args[1], out var d) ? d : 30;
+        await using var scope = host.Services.CreateAsyncScope();
+        var aggregation = scope.ServiceProvider.GetRequiredService<PriceAggregationService>();
+        await aggregation.RunAsync(days: days, ct: CancellationToken.None);
         Log.CloseAndFlush();
         return;
     }

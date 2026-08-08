@@ -2,7 +2,7 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
-import type { PricePoint, ProductDetail } from '../api';
+import type { AlertResponse, PricePoint, ProductDetail } from '../api';
 import { formatBRL, formatDateTime, formatSpecValue, specLabel } from '../format';
 import { Seo } from '../seo';
 import { BuildState } from '../build-state';
@@ -33,6 +33,13 @@ export class Product {
   protected adding = signal(false);
   protected added = signal(false);
 
+  // alerta de preço (M6)
+  protected alertEmail = signal('');
+  protected alertTarget = signal<string>('');
+  protected alertSending = signal(false);
+  protected alertSent = signal<AlertResponse | null>(null);
+  protected alertError = signal('');
+
   protected readonly formatBRL = formatBRL;
   protected readonly formatDateTime = formatDateTime;
   protected readonly formatSpecValue = formatSpecValue;
@@ -49,6 +56,31 @@ export class Product {
       this.added.set(true);
     } finally {
       this.adding.set(false);
+    }
+  }
+
+  async createAlert(): Promise<void> {
+    const target = Number(this.alertTarget().replace(',', '.'));
+    if (!this.alertEmail().includes('@') || !target || target <= 0) {
+      this.alertError.set('Informe um e-mail válido e um preço alvo.');
+      return;
+    }
+
+    this.alertSending.set(true);
+    this.alertError.set('');
+    try {
+      const alert = await this.http
+        .post<AlertResponse>('/api/v1/alerts', {
+          productId: this.id(),
+          email: this.alertEmail(),
+          targetPrice: target,
+        })
+        .toPromise();
+      this.alertSent.set(alert!);
+    } catch {
+      this.alertError.set('Não foi possível criar o alerta. Tente novamente.');
+    } finally {
+      this.alertSending.set(false);
     }
   }
 }

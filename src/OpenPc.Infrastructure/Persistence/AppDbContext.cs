@@ -16,6 +16,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<ProductMatchCandidate> MatchCandidates => Set<ProductMatchCandidate>();
     public DbSet<Build> Builds => Set<Build>();
     public DbSet<BuildItem> BuildItems => Set<BuildItem>();
+    public DbSet<PriceDaily> PriceDaily => Set<PriceDaily>();
+    public DbSet<PriceAlert> PriceAlerts => Set<PriceAlert>();
+    public DbSet<PriceAlertEvent> PriceAlertEvents => Set<PriceAlertEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

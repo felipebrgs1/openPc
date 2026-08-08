@@ -67,6 +67,37 @@ export interface PricePoint {
   price: number;
 }
 
+export interface OfferItem {
+  product: ProductListItem;
+  currentPrice: number;
+  price24hAgo: number | null;
+  price7dAgo: number | null;
+  dropPercent24h: number | null;
+  dropPercent7d: number | null;
+  lowestInDays: number;
+  isAnomaly: boolean;
+}
+
+export interface OffersResponse {
+  items: OfferItem[];
+  period: '24h' | '7d';
+}
+
+export interface CreateAlertRequest {
+  productId: string;
+  email: string;
+  targetPrice: number;
+}
+
+export interface AlertResponse {
+  id: string;
+  productId: string;
+  email: string;
+  targetPrice: number;
+  confirmed: boolean;
+  confirmUrl: string;
+}
+
 export interface BuildItemDto {
   category: string;
   productId: string | null;

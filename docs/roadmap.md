@@ -12,7 +12,7 @@
 | M3 | Engine de compatibilidade | 2 semanas |
 | M4 | Frontend: catálogo + montador de PC | 3–4 semanas |
 | M5 | Deploy VPS + observabilidade 🔶 (infra pronta; deploy real pendente de VPS) | 1 semana |
-| M6 | Histórico, ofertas e alertas | 2 semanas |
+| M6 | Histórico, ofertas e alertas ✅ | 2 semanas |
 | M7 | Auth, builds salvos, compartilhamento social | 2 semanas |
 
 ---
@@ -280,6 +280,51 @@ de uptime sem intervenção manual (depende do deploy real).
 
 **Critério de aceite:** página de ofertas com dados reais; alerta dispara
 e-mail em queda real (testado com preço simulado em staging).
+
+---
+
+## M6 — Histórico, ofertas e alertas ✅ (validado 2026-08-08)
+
+**Objetivo:** valor recorrente — motivo para o usuário voltar.
+
+**Resultado: fluxo completo validado de ponta a ponta — agregação `price_daily`
+populada com dados reais (3.546 linhas), `/ofertas` com quedas calculadas
+(10,7% em 7d, badge "menor preço em 8 dias", toggle 24h/7d no browser), alerta
+de preço disparando e-mail (dry-run) com cooldown de 24 h e evento auditado,
+gráfico de 90 dias com labels no detalhe, UI de alerta no produto.**
+
+- [x] Agregação `price_daily` + retenção (raw 90 dias, daily 24 meses)
+- [x] `/ofertas`: maiores quedas 24 h/7 dias, badge "menor preço em X dias"
+- [x] Gráfico de histórico completo no detalhe do produto
+- [x] Alerta de preço por e-mail (definir alvo no produto; disparo no re-scrape)
+      — magic link de confirmação/cancelamento (auth mínima, sem conta)
+- [x] Detecção de anomalia simples: queda >15% vs mediana 30 dias
+
+**Critério de aceite:** ✅ página de ofertas com dados reais (validada no
+browser); alerta dispara e-mail em queda real (testado com preço simulado em
+staging — dry-run de SMTP + evento registrado).
+
+**Achados operacionais (registrados no código/docs):**
+- **Queda de janela = preço no INÍCIO da janela** (primeiro ponto com data ≥
+  corte), não o ponto mais recente — "preço de 7 dias atrás" tem semântica
+  estável mesmo com séries esparsas. Testes capturaram e fixaram a regra.
+- **Badge "menor preço em X dias" = 0 quando o preço atual não é o menor**
+  (ontem foi menor) — o front esconde o badge nesse caso; 1..N indica há
+  quantos dias o atual é o mínimo.
+- Alerta: cooldown de 24 h entre disparos do mesmo alerta (CPU/GPU são
+  coletadas 4×/dia); `price_alert_events` é append-only (auditoria);
+  cancelamento exige o token do magic link (401 sem ele).
+- **Scraper não usa `AddInfrastructure`** (registra DbContext próprio) — o
+  `PriceAggregationService` foi registrado manualmente no Program.cs dele.
+- **Design-time**: criada `AppDbContextFactory` (IDesignTimeDbContextFactory)
+  para `dotnet ef` sem o pacote Design na API — `dotnet ef migrations
+  add/update --startup-project OpenPc.Infrastructure`.
+- E-mail: `Smtp:Host/Port/Username/Password/From` via env; sem host, dry-run
+  no log (modo staging/dev). O e-mail de confirmação do alerta fica a cargo do
+  deploy (o link de confirmação é GET `/api/v1/alerts/confirm?token=...`).
+- Comandos novos no scraper: `aggregate-prices [dias]` (roda a agregação
+  manualmente, não coleta nada) e `alerts-check <productId>` (dispara alertas
+  de um produto — validação em staging).
 
 ---
 

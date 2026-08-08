@@ -4,16 +4,42 @@
   </p>
 
   @if (!geometry()) {
-    <p class="px-4 py-3 text-sm text-zinc-500">Sem histórico suficiente para o gráfico.</p>
+    <p class="px-4 py-6 text-center text-sm text-zinc-500">
+      Sem histórico suficiente para o gráfico — volte em alguns dias para ver a
+      evolução do preço.
+    </p>
   } @else {
     <svg
       [attr.viewBox]="'0 0 ' + geometry()!.width + ' ' + geometry()!.height"
-      class="mt-2 w-full px-4"
+      class="mt-2 w-full px-2"
       role="img"
       [attr.aria-label]="'Histórico de preço: menor R$ ' + geometry()!.min + ', maior R$ ' + geometry()!.max"
     >
+      <!-- linha de referência do preço atual -->
+      <line
+        [attr.x1]="geometry()!.labels[0].x"
+        [attr.x2]="geometry()!.labels[2].x"
+        [attr.y1]="geometry()!.lastY"
+        [attr.y2]="geometry()!.lastY"
+        class="stroke-zinc-300"
+        stroke-dasharray="4 4"
+        stroke-width="1"
+      />
       <path [attr.d]="geometry()!.area" class="fill-brand-100" />
-      <path [attr.d]="geometry()!.line" class="fill-none stroke-brand-600" stroke-width="2" />
+      <path [attr.d]="geometry()!.line" class="fill-none stroke-brand-600" stroke-width="2.5" />
+
+      <!-- labels de data -->
+      @for (label of geometry()!.labels; track label.text + label.x) {
+        <text
+          [attr.x]="label.x"
+          y="196"
+          text-anchor="middle"
+          class="fill-zinc-400"
+          font-size="11"
+        >
+          {{ label.text }}
+        </text>
+      }
     </svg>
     <p class="mt-2 px-4 pb-3 text-sm text-zinc-600">
       <span class="font-semibold">{{ formatBRL(geometry()!.last.price) }}</span>

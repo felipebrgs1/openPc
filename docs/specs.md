@@ -150,8 +150,21 @@ last_seen_at, created_at`
 **`price_history`** — série temporal de preços (append-only).
 `id, listing_id (FK), price_cash (à vista/pix), price_installments,
 installments_count, in_stock, collected_at`
-Índice: `(listing_id, collected_at DESC)`. Retenção: 24 meses, com
-agregação diária para dados > 90 dias (tabela `price_daily`).
+Índice: `(listing_id, collected_at DESC)`. Retenção: **90 dias** (M6), com
+agregação diária para dados mais antigos na tabela `price_daily`.
+
+**`price_daily`** (M6) — menor preço em estoque por produto/dia (fonte da
+série de longo prazo e da página de ofertas).
+`id, product_id (FK), date, min_price, listing_id (FK nullable), updated_at`
+UNIQUE(product_id, date). Retenção: 24 meses.
+
+**`price_alerts`** (M6) — alerta de preço por e-mail, anônimo com magic link.
+`id, product_id (FK), email, target_price, token (UNIQUE), confirmed,
+created_at, confirmed_at, last_triggered_at, trigger_count`
+Dispara quando o menor preço em estoque ≤ target no re-scrape (cooldown 24 h).
+
+**`price_alert_events`** (M6) — disparos (append-only, auditoria).
+`id, alert_id (FK), listing_id (FK), price_at_trigger, email_sent, triggered_at`
 
 **`builds`** — montagem do usuário.
 `id, slug (compartilhável), owner_id (nullable, fase com auth), name,
@@ -335,6 +348,10 @@ Paginação por cursor (`?cursor=&limit=`) nas listagens grandes.
 | `GET /products?category=&q=&brand=&minPrice=&maxPrice=&attrs[socket]=am5&compatibleWith=&sort=price_asc` | Busca/filtro de catálogo; `compatibleWith` aplica filtro da engine |
 | `GET /products/{id}` | Detalhe + specs + ofertas por loja + menor preço |
 | `GET /products/{id}/prices?days=90` | Série de histórico para gráfico |
+| `GET /offers?period=24h|7d&limit=` | Maiores quedas de preço + badge "menor preço em X dias" + flag de anomalia (M6) |
+| `POST /alerts` | Cria alerta de preço (email + alvo; retorna magic link de confirmação) |
+| `GET /alerts/confirm?token=` | Confirma alerta (link do e-mail) |
+| `DELETE /alerts/{id}?token=` | Cancela alerta (token obrigatório) |
 | `POST /builds` | Cria build (retorna `slug`) |
 | `GET /builds/{slug}` | Build completo + preço total + resultado da engine |
 | `PUT /builds/{slug}/items/{category}` | Define/troca peça do slot (re-roda engine) |
@@ -377,7 +394,8 @@ gestão de seeds de compatibilidade.
    margem, lista de warnings/errors com link para a peça conflitante.
 5. **`/build/:slug`** — build compartilhável (público, read-only para
    visitante; clone para editar).
-6. **`/ofertas`** — maiores quedas de preço das últimas 24 h/7 dias.
+6. **`/ofertas`** — maiores quedas de preço das últimas 24 h/7 dias (M6),
+   badge "menor preço em X dias" e "queda anômala" (>15% vs mediana 30 d).
 
 ### 7.3 UX de compatibilidade (diferencial do produto)
 - Peça incompatível **não aparece** no seletor (filtro server-side).
@@ -449,4 +467,6 @@ Compose de produção: `caddy` (80/443), `web`, `api`, `scraper`, `db`
 | 2 | **UI**: Tailwind + componentes próprios (§7.1). Material descartado | ✅ 2026-08-07 |
 | 3 | **Lojas v1**: Kabum (piloto), Terabyte, Pichau. **Amazon adiada** para pós-M7 (§5.2) | ✅ 2026-08-07 |
 | 4 | **Links de afiliado** (Kabum tem programa) — monetização futura; arquitetura já guarda `listing.url` separada para permitir rewrite | backlog |
-| 5 | **Auth**: necessária para salvar builds nomeados e alertas de preço. Anônimo monta e compartilha por slug sem conta (M7) | roadmap |
+| 5 | **Auth**: necessária para salvar builds nomeados e alertas de preço. Anônimo monta e compartilha por slug sem conta (M7). Alertas M6 usam magic link (token) sem conta | roadmap |
+| 6 | **Alertas de preço (M6)**: e-mail via SMTP configurável (`Smtp:*`); sem host, dry-run no log. Confirmação/cancelamento por magic link | ✅ 2026-08-08 |
+| 7 | **Anomalia de preço (M6)**: queda >15% vs mediana de 30 dias → flag `isAnomaly` em `/offers` | ✅ 2026-08-08 |

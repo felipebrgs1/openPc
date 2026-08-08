@@ -14,6 +14,7 @@ public sealed class CollectionService(
     IEnumerable<IStoreCollector> collectors,
     IngestionService ingestion,
     ScrapeAlertService alert,
+    PriceAlertService priceAlerts,
     ILogger<CollectionService> logger)
 {
     public async Task RunJobAsync(Guid jobId, CancellationToken ct)
@@ -49,6 +50,10 @@ public sealed class CollectionService(
             run.FinishedAt = DateTime.UtcNow;
             logger.LogInformation("Coleta {Store}/{Category} ok em {Ms} ms ({Found} itens)",
                 job.Store.Slug, job.Category.Slug, sw.ElapsedMilliseconds, result.ItemsFound);
+
+            // alertas de preço: só produtos cujo menor preço caiu no run
+            foreach (var productId in result.PriceDropProductIds)
+                await priceAlerts.CheckProductAsync(productId, ct);
         }
         catch (Exception ex)
         {
