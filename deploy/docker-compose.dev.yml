@@ -60,6 +60,10 @@ services:
       # obj/ mascarado por volume anônimo: o `dotnet watch` do container
       # escreve nos próprios obj/ e não trava os builds do host.
       - ../src:/src/src
+      # props de raiz (Directory.*.props) NÃO ficam em src/ — sem o mount,
+      # mudanças como novos PackageVersion exigiriam rebuild da imagem.
+      - ../Directory.Build.props:/src/Directory.Build.props:ro
+      - ../Directory.Packages.props:/src/Directory.Packages.props:ro
       - /src/src/OpenPc.Api/obj
       - /src/src/OpenPc.Domain/obj
       - /src/src/OpenPc.Infrastructure/obj
@@ -73,6 +77,7 @@ services:
   web:
     build:
       context: ../web
+      target: development
     ports:
       - "4200:4200"
     volumes:
@@ -92,6 +97,8 @@ services:
       PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
     volumes:
       - ../src:/src/src
+      - ../Directory.Build.props:/src/Directory.Build.props:ro
+      - ../Directory.Packages.props:/src/Directory.Packages.props:ro
       - /src/src/OpenPc.Api/obj
       - /src/src/OpenPc.Domain/obj
       - /src/src/OpenPc.Infrastructure/obj
