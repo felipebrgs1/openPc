@@ -1,9 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
-import type { OffersResponse } from '../api';
-import { formatBRL } from '../format';
-import { Seo } from '../seo';
+import type { OffersResponse } from '../../api';
+import { formatBRL } from '../../format';
+import { Seo } from '../../seo';
 
 @Component({
   selector: 'app-offers',

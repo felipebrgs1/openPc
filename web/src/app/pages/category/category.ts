@@ -1,9 +1,9 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
-import type { Category as CategoryDto, ProductsResponse } from '../api';
-import { Seo } from '../seo';
-import { formatBRL } from '../format';
+import type { Category as CategoryDto, ProductsResponse } from '../../api';
+import { Seo } from '../../seo';
+import { formatBRL } from '../../format';
 
 @Component({
   selector: 'app-category',

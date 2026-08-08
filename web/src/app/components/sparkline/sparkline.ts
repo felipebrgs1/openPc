@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
-import type { PricePoint } from '../api';
-import { formatBRL, formatDate } from '../format';
+import type { PricePoint } from '../../api';
+import { formatBRL, formatDate } from '../../format';
 
 const W = 640;
 const H = 200;

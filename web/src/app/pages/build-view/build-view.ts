@@ -1,12 +1,12 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
-import type { BuildDto, PriceComparison } from '../api';
-import { categoryLabel } from '../api';
-import { formatBRL, formatDateTime } from '../format';
-import { Seo } from '../seo';
-import { BuildState } from '../build-state';
-import { CategoryIcon } from '../components/category-icon';
+import type { BuildDto, PriceComparison } from '../../api';
+import { categoryLabel } from '../../api';
+import { formatBRL, formatDateTime } from '../../format';
+import { Seo } from '../../seo';
+import { BuildState } from '../../build-state';
+import { CategoryIcon } from '../../components/category-icon/category-icon';
 
 @Component({
   selector: 'app-build-view',

@@ -1,9 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
-import type { Category } from '../api';
-import { Seo } from '../seo';
-import { CategoryIcon } from '../components/category-icon';
+import type { Category } from '../../api';
+import { Seo } from '../../seo';
+import { CategoryIcon } from '../../components/category-icon/category-icon';
 
 @Component({
   selector: 'app-home',

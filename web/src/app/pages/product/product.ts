@@ -2,11 +2,11 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
-import type { AlertResponse, PricePoint, ProductDetail } from '../api';
-import { formatBRL, formatDateTime, formatSpecValue, specLabel } from '../format';
-import { Seo } from '../seo';
-import { BuildState } from '../build-state';
-import { Sparkline } from '../components/sparkline';
+import type { AlertResponse, PricePoint, ProductDetail } from '../../api';
+import { formatBRL, formatDateTime, formatSpecValue, specLabel } from '../../format';
+import { Seo } from '../../seo';
+import { BuildState } from '../../build-state';
+import { Sparkline } from '../../components/sparkline/sparkline';
 
 @Component({
   selector: 'app-product',

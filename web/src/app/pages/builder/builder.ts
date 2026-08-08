@@ -1,11 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import type { BuildItemDto, Category, IssueDto, ProductListItem, ProductsResponse } from '../api';
-import { categoryLabel } from '../api';
-import { formatBRL } from '../format';
-import { Seo } from '../seo';
-import { BuildState } from '../build-state';
-import { CategoryIcon } from '../components/category-icon';
+import type { BuildItemDto, Category, IssueDto, ProductListItem, ProductsResponse } from '../../api';
+import { categoryLabel } from '../../api';
+import { formatBRL } from '../../format';
+import { Seo } from '../../seo';
+import { BuildState } from '../../build-state';
+import { CategoryIcon } from '../../components/category-icon/category-icon';
 
 @Component({
   selector: 'app-builder',

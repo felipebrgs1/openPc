@@ -2,7 +2,7 @@ import { Component, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { httpResource } from '@angular/common/http';
 import type { Category } from './api';
-import { CategoryIcon } from './components/category-icon';
+import { CategoryIcon } from './components/category-icon/category-icon';
 
 @Component({
   selector: 'app-root',
