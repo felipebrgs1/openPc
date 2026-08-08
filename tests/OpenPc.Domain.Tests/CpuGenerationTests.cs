@@ -43,6 +43,14 @@ public class CpuGenerationTests
     [InlineData("intel 9400f")]     // LGA1151 — fora da matriz
     [InlineData("amd 6200")]        // Ryzen mobile
     [InlineData("intel 155h")]      // Core Ultra mobile (Meteor Lake)
+    [InlineData("amd athlon 3000g")]            // tem 4 dígitos, mas não é Ryzen
+    [InlineData("AMD A10-5800K, 3.8GHz, Quad Core, FM2, OEM")] // "5800" daria zen3
+    [InlineData("AMD A10 9700 Bristol Ridge, 3.5GHz, AM4, DDR4")] // "9700" daria zen5
+    [InlineData("amd fx-8350")]                 // "8350" daria zen4
+    [InlineData("AMD A8-7600, 3.1GHz, FM2+")]
+    [InlineData("amd sempron 145")]
+    [InlineData("amd phenom ii x4 965")]
+    [InlineData("Amd Ryzen Athlon 3000g Socket Am4 / 3.5ghz / 5mb - Oem")] // título com ruído
     public void Classify_ForaDaMatrizRetornaNull(string? model)
     {
         Assert.Null(CpuGeneration.Classify(model));

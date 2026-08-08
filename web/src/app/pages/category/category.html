@@ -28,12 +28,27 @@
         <label for="f-sort" class="mb-1 block text-xs font-medium text-zinc-500">
           Ordenar por
         </label>
-        <select id="f-sort" (change)="changeSort($event)" class="input">
+        <select id="f-sort" [value]="sort()" (change)="changeSort($event)" class="input">
           <option value="price_asc">Menor preço</option>
           <option value="price_desc">Maior preço</option>
           <option value="name">Nome</option>
         </select>
       </div>
+
+      @if (category() === 'cpu' || category() === 'motherboard') {
+        <div>
+          <label for="f-socket" class="mb-1 block text-xs font-medium text-zinc-500">
+            Socket
+          </label>
+          <select id="f-socket" [value]="socket()" (change)="onSocketChange($event)" class="input">
+            <option value="">Todos</option>
+            <option value="am4">AM4</option>
+            <option value="am5">AM5</option>
+            <option value="lga 1700">LGA 1700</option>
+            <option value="lga 1851">LGA 1851</option>
+          </select>
+        </div>
+      }
 
       <div>
         <span class="mb-1 block text-xs font-medium text-zinc-500">Faixa de preço</span>
@@ -57,23 +72,24 @@
   <section>
     <div class="flex items-baseline justify-between">
       <h2 class="text-lg font-semibold text-zinc-900">{{ categoryName() }}</h2>
-      @if (products.value(); as page) {
-        <span class="text-sm text-zinc-400">{{ page.total }} peças</span>
+      @if (page(); as result) {
+        <span class="text-sm text-zinc-400">{{ result.total }} peças</span>
       }
     </div>
 
-    @if (products.isLoading()) {
-      <p class="mt-4 text-sm text-zinc-500">Carregando peças...</p>
-    } @else if (products.error()) {
-      <p class="mt-4 text-sm text-red-600">Não foi possível carregar as peças.</p>
-    } @else if (products.value(); as page) {
-      @if (page.items.length === 0) {
+    @if (page(); as result) {
+      @if (products.error()) {
+        <p class="mt-4 text-sm text-red-600">
+          Não foi possível atualizar as peças — mostrando dados anteriores.
+        </p>
+      }
+      @if (result.items.length === 0) {
         <p class="card mt-4 p-6 text-center text-sm text-zinc-500">
           Nenhuma peça encontrada com esses filtros.
         </p>
       } @else {
-        <div class="card mt-4 divide-y divide-zinc-100">
-          @for (product of page.items; track product.id) {
+        <div class="card mt-4 divide-y divide-zinc-100 [overflow-anchor:none]">
+          @for (product of result.items; track product.id) {
             <a
               routerLink="/pecas/{{ product.categorySlug }}/{{ product.id }}"
               class="group flex items-center gap-3 px-3 py-2.5 transition hover:bg-brand-50/60 sm:px-4"
@@ -107,14 +123,23 @@
           }
         </div>
 
-        @if (page.items.length < page.total) {
+        @if (result.items.length < result.total) {
           <div class="mt-5 text-center">
-            <button type="button" (click)="loadMore()" class="btn-outline">
-              Carregar mais ({{ page.items.length }} de {{ page.total }})
+            <button
+              type="button"
+              (click)="loadMore()"
+              [disabled]="products.isLoading()"
+              class="btn-outline disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Carregar mais ({{ result.items.length }} de {{ result.total }})
             </button>
           </div>
         }
       }
+    } @else if (products.isLoading()) {
+      <p class="mt-4 text-sm text-zinc-500">Carregando peças...</p>
+    } @else {
+      <p class="mt-4 text-sm text-red-600">Não foi possível carregar as peças.</p>
     }
   </section>
 </div>

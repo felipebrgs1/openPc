@@ -42,7 +42,7 @@ public static class CatalogEndpoints
         CancellationToken ct,
         [Microsoft.AspNetCore.Mvc.FromQuery] bool showIncompatible = false)
     {
-        var safeLimit = Math.Clamp(limit ?? 50, 1, 100);
+        var safeLimit = Math.Clamp(limit ?? 50, 1, 5000);
         var safeOffset = Math.Max(offset ?? 0, 0);
 
         // filtros de atributo: ?attrs[socket]=am5&attrs[memory_type]=ddr5
@@ -86,7 +86,16 @@ public static class CatalogEndpoints
             query = query.Where(p => p.Brand == brand);
         if (attrs is not null)
             foreach (var (key, value) in attrs)
-                query = query.Where(p => p.Attributes.Any(a => a.Key == key && a.ValueText == value));
+            {
+                // comparação tolerante a espaço: "LGA 1700", "lga 1700" e
+                // "lga1700" (variações de título) filtram o mesmo conjunto.
+                // Só funções traduzíveis (string.Replace → SQL REPLACE).
+                var normalized = value.Replace(" ", "");
+                query = query.Where(p => p.Attributes.Any(a =>
+                    a.Key == key
+                    && a.ValueText != null
+                    && (a.ValueText == value || a.ValueText.Replace(" ", "") == normalized)));
+            }
 
         if (compatibleIds is not null)
             query = query.Where(p => compatibleIds.Contains(p.Id));

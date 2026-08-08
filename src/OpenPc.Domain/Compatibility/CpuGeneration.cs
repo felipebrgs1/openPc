@@ -19,6 +19,15 @@ public static partial class CpuGeneration
 
         if (m.Contains("ryzen") || m.StartsWith("amd"))
         {
+            // AMD fora da matriz desktop: Athlon, A-series (A10-5800K, A8-7600),
+            // FX, Sempron, Phenom, Opteron. Só "startsWith amd" não basta:
+            // "Athlon 3000g" tem 4 dígitos (daria zen2) e "A10-5800K" tem
+            // "5800" (daria zen3) — ambos classificados errado. Títulos com
+            // ruído de loja ("Amd Ryzen Athlon 3000g") caem aqui também.
+            if (m.Contains("athlon") || m.Contains("sempron") || m.Contains("phenom")
+                || m.Contains("opteron") || AmdSeries().IsMatch(m) || FxSeries().IsMatch(m))
+                return null;
+
             var four = FourDigit().Match(m);
             if (!four.Success)
                 return null;
@@ -58,6 +67,14 @@ public static partial class CpuGeneration
 
     [GeneratedRegex(@"(?<!\d)(\d{4})(?!\d)")]
     private static partial Regex FourDigit();
+
+    /// <summary>A-series da AMD: A4/A6/A8/A9/A10/A12 (ex.: "A10-5800K", "a8-7600").</summary>
+    [GeneratedRegex(@"\ba\d{1,2}\b")]
+    private static partial Regex AmdSeries();
+
+    /// <summary>FX da AMD (ex.: "FX-8350", "FX-9590").</summary>
+    [GeneratedRegex(@"\bfx\b")]
+    private static partial Regex FxSeries();
 
     [GeneratedRegex(@"(?<!\d)(1[2-4]\d{3})(?!\d)")]
     private static partial Regex IntelFamily();
