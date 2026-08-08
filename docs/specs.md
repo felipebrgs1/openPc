@@ -174,18 +174,18 @@ O mesmo produto aparece com nomes diferentes em cada loja
 (`"Processador AMD Ryzen 5 7600"` vs `"Ryzen 5 7600 6-Core 3.8GHz"`).
 Estratégia em 3 níveis:
 
-1. **EAN/GTIN**: quando presente na página (Kabum e Amazon geralmente têm),
-   match exato. Chave de ouro.
-2. **Match determinístico**: normalizar string (lower, sem acento, remover
-   stopwords como "processador"/"placa de vídeo"), extrair tokens-chave
+1. **Part number do fabricante** (validado no M1): nenhuma loja expõe EAN no
+   front, mas todas carregam o part number (ex: `100-100001721WOF`, `BX8071512400F`)
+   no nome ou no slug da URL. **Âncora primária** do match — extrair por regex
+   e normalizar (uppercase, sem hífen).
+2. **Match determinístico por tokens**: normalizar string (lower, sem acento,
+   remover stopwords como "processador"/"placa de vídeo"), extrair tokens-chave
    (marca + modelo numérico, ex: `amd 7600`, `rtx 5070`). Match se o conjunto
    de tokens-chave for idêntico.
 3. **Fila de revisão**: candidatos com similaridade alta mas não exata
    (`pg_trgm` `similarity > 0.6`) vão para `product_match_candidates` com
-   aprovação manual via endpoint admin.
-
-Todo listing novo sem match automático cria um `product` provisório e entra na
-fila — nunca bloqueia a ingestão.
+   aprovação manual via endpoint admin. EAN (quando existir) entra como
+   reforço, não dependência.
 
 ---
 
@@ -279,28 +279,29 @@ public interface IStoreCollector
 Pipeline por listing: **fetch → parse → extract specs → match/criar produto →
 upsert listing → append price**.
 
-### 5.2 Estratégia por loja
+### 5.2 Estratégia por loja (validada no spike M1 — ver `docs/scraping-findings.md`)
 
 **Escopo v1:** Kabum, Terabyte, Pichau. **Amazon adiada** ✅ (decidido
 2026-08-07) — captcha agressivo e rotatividade de layout a tornam a loja mais
 hostil; entra no backlog pós-M7 via scraping dedicado ou PA-API.
 
-**Kabum é a loja piloto** — front moderno com dados estruturados acessíveis
-(JSON-LD e API interna de busca), é o caminho mais curto para validar o
-pipeline de ponta a ponta.
+**Resultado do spike (2026-08-08): 3/3 lojas viáveis, 100% de sucesso.**
 
-Ordem de preferência para cada loja, com fallback:
+| Loja | Transporte | Fonte de dados |
+|---|---|---|
+| **Kabum** (piloto) | `HttpClient` puro — **sem anti-bot** | `__NEXT_DATA__` SSR: listagem (`catalogServer.data[]`: code, name, price, oldPrice, maxInstallment, thumbnail, available, manufacturer) e produto (`technicalInformation.text` = ficha técnica HTML) |
+| **Pichau** | **Playwright** (Chromium **completo**, não headless-shell) — Cloudflare bloqueia curl e até a API VTEX | DOM dos cards: `de R$ X por R$ Y` (PIX), parcelas, badge de estoque; slug com part number; paginação VTEX a mapear |
+| **Terabyte** | **Playwright** (Chromium completo) — Cloudflare idem | DOM dos cards: `De: R$ X por: R$ Y`, "à vista no Pix", parcelas; URL `/produto/{id}/{slug}` |
 
-1. **Dados estruturados na página**: `application/ld+json` (JSON-LD
-   `Product`/`Offer`) e `__NEXT_DATA__`/equivalente. As 3 lojas usam
-   SSR/SPA moderna — quase sempre há JSON embutido. Muito mais estável que
-   seletores CSS.
-2. **APIs internas de busca**: os fronts dessas lojas chamam endpoints JSON
-   (APIs próprias/VTEX). Engenharia reversa via DevTools → usar o endpoint
-   direto com HttpClient. Mais rápido e barato que browser.
-3. **Playwright (Chromium)**: fallback quando há anti-bot (Cloudflare) ou
-   renderização client-side pesada. Headless, 1-2 instâncias, delays
-   randômicos.
+Regras de operação:
+- Rate limit: Kabum 1 req/2 s com jitter; Pichau/Terabyte uma sessão de browser
+  por coleta, delay 400–800 ms entre scrolls, catálogo 1×/dia.
+- **Pool de 1–2 browsers** reutilizado entre coletas (o Cloudflare é resolvido
+  uma vez por sessão).
+- Preço da Kabum: listagem ≠ página de produto (R$ 2.163,95 vs R$ 1.289,99 no
+  mesmo SKU) — validar `priceWithDiscount` como canônico no M2.
+- **Sem EAN em nenhuma loja** — o dedup depende do part number do fabricante
+  (presente no nome/slug de todas) + tokens marca/modelo (§3.3).
 
 ### 5.3 Boas práticas e riscos
 
@@ -413,9 +414,11 @@ Rede interna isolada — só Caddy expõe portas.
 - Migrações EF Core: aplicadas no startup da API (ou job one-shot) com lock
   de migração — nunca via scraper.
 
-### 8.3 Requisitos de VPS (estimativa)
-- Scraper com Chromium é o gargalo: ~1 GB RAM quando ativo.
-- Alvo mínimo: **2 vCPU / 4 GB RAM / 40 GB SSD**. Confortável: 4 vCPU / 8 GB.
+### 8.3 Requisitos de VPS (estimativa, revisado no M1)
+- Scraper com Chromium **completo** (necessário para Pichau/Terabyte) é o
+  gargalo: ~1,5 GB RAM sob carga com o worker .NET.
+- Alvo mínimo: **4 vCPU / 8 GB RAM / 40 GB SSD**. Com 4 GB, o Chromium disputa
+  RAM com API + Postgres + Redis.
 
 ---
 

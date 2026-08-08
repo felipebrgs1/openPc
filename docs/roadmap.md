@@ -34,21 +34,23 @@ exibe categorias vindas do banco.
 
 ---
 
-## M1 — Spike de scraping (validação de risco)
+## M1 — Spike de scraping ✅ (validado 2026-08-08)
 
 **Objetivo:** provar que dá para coletar dados úteis das 3 lojas da v1
 **antes** de construir o pipeline inteiro. Kabum primeiro — é a loja piloto.
 
-- [ ] Protótipo descartável (console app) por loja, na ordem:
-  - [ ] **Kabum**: listar 1 categoria (processadores), extrair
-        nome/preço/URL/sku/EAN
-  - [ ] Terabyte: idem
-  - [ ] Pichau: idem
-- [ ] Comparar para cada loja: JSON-LD vs API interna vs Playwright
+**Resultado: 3/3 lojas viáveis, 100% de sucesso — gate aprovado.**
+Detalhes e decisões em `docs/scraping-findings.md`.
+
+- [x] Protótipo descartável (console app) por loja, na ordem:
+  - [x] **Kabum**: extração via `__NEXT_DATA__` (SSR) — 180/180 produtos, sem anti-bot
+  - [x] Terabyte: Playwright (Chromium completo) — 149/149 cards
+  - [x] Pichau: Playwright (Chromium completo) — 45/45 cards
+- [x] Comparar para cada loja: JSON-LD vs API interna vs Playwright
   (custo, estabilidade, taxa de sucesso em 100 requisições)
-- [ ] Documentar por loja: estratégia escolhida, rate limit seguro, specs
+- [x] Documentar por loja: estratégia escolhida, rate limit seguro, specs
   extraíveis da página de produto (socket, TDP, dimensões...)
-- [ ] ~~Amazon~~ — adiada para o backlog pós-M7 (decisão 2026-08-07)
+- [x] ~~Amazon~~ — adiada para o backlog pós-M7 (decisão 2026-08-07)
 
 **Critério de aceite:** relatório curto em `docs/scraping-findings.md` com
 taxa de sucesso por loja e estratégia definida. **Gate:** se menos de 2 lojas

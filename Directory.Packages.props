@@ -2,7 +2,6 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
-
   <ItemGroup>
     <!-- EF Core unificado em 10.0.10 (Design 10.0.10 exige >= 10.0.10;
          Npgsql 10.0.3 exige >= 10.0.4). Relational é pinado explicitamente
@@ -11,14 +10,13 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Playwright" Version="1.61.0" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
     <!-- CVE-2026-49451: AspNetCore.OpenApi 10.0.10 puxa OpenApi 2.0.0 vulnerável;
          corrigido em 2.7.5 (GHSA-v5pm-xwqc-g5wc). -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
-
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
   </ItemGroup>
