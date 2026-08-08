@@ -4,6 +4,7 @@ using OpenPc.Infrastructure;
 using OpenPc.Infrastructure.Persistence;
 using OpenPc.Infrastructure.Persistence.Seed;
 using Serilog;
+using Serilog.Formatting.Json;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -13,23 +14,39 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Host.UseSerilog((ctx, cfg) => cfg
-        .ReadFrom.Configuration(ctx.Configuration)
-        .WriteTo.Console());
+    builder.Host.UseSerilog((ctx, cfg) =>
+    {
+        cfg.ReadFrom.Configuration(ctx.Configuration);
+        // Formato do stdout: texto em dev, JSON em produção (env Logging__Format=json).
+        if (string.Equals(ctx.Configuration["Logging:Format"], "json", StringComparison.OrdinalIgnoreCase))
+            cfg.WriteTo.Console(new JsonFormatter());
+        else
+            cfg.WriteTo.Console();
+    });
 
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddStackExchangeRedisCache(o =>
         o.Configuration = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379");
-    builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
-        .WithOrigins("http://localhost:4200", "http://localhost:8080")
-        .AllowAnyHeader()
-        .AllowAnyMethod()));
+
+    // CORS restrito: origens via config (env Cors__AllowedOrigins, vírgula-separada).
+    // Em produção o front é servido pelo Caddy no mesmo domínio (same-origin),
+    // então CORS não é necessário — a lista fica vazia por padrão em prod.
+    var corsOrigins = (builder.Configuration["Cors:AllowedOrigins"] ?? "")
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    if (corsOrigins.Length > 0)
+    {
+        builder.Services.AddCors(o => o.AddDefaultPolicy(p => p
+            .WithOrigins(corsOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()));
+    }
     builder.Services.AddOpenApi();
 
     var app = builder.Build();
 
     app.UseSerilogRequestLogging();
-    app.UseCors();
+    if (corsOrigins.Length > 0)
+        app.UseCors();
     app.MapOpenApi();
     app.MapCatalogEndpoints();
     app.MapBuildEndpoints();
@@ -60,6 +77,8 @@ try
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>()
             .CreateLogger("DbSeeder");
+        // Migrações com lock (advisory lock do Postgres) antes do seed.
+        await DatabaseMigrator.MigrateWithLockAsync(db);
         await DbSeeder.SeedAsync(db, logger);
     }
 

@@ -395,24 +395,30 @@ gestão de seeds de compatibilidade.
 deploy/
   docker-compose.yml          # produção (VPS)
   docker-compose.dev.yml      # desenvolvimento local
-  Caddyfile
-  backup/pg-backup.sh         # pg_dump diário → rclone/S3
+  Caddyfile                   # TLS + reverse proxy + rate limit
+  caddy/Dockerfile            # Caddy custom (módulo mholt/caddy-ratelimit)
+  backup/Dockerfile           # pg_dump diário + rclone (cron 03:30 UTC)
+  backup/pg-backup.sh         # pg_dump → /backups + retenção + off-site
+  backup/pg-restore.sh        # teste de restore (banco efêmero)
+  smoke-test.sh               # smoke test pós-deploy
+  .env.example                # variáveis de produção (copiar p/ .env)
 Dockerfiles na raiz de cada app (multi-stage):
   src/OpenPc.Api/Dockerfile       # SDK 10 → aspnet:10-alpine
-  src/OpenPc.Scraper/Dockerfile   # SDK 10 → runtime + Playwright deps
+  src/OpenPc.Scraper/Dockerfile   # SDK 10 → playwright:noble + runtime .NET 10
   web/Dockerfile                  # node build → nginx:alpine
 ```
 
 Compose de produção: `caddy` (80/443), `web`, `api`, `scraper`, `db`
-(volume `pgdata`), `redis`. Healthchecks em todos; `restart: unless-stopped`.
-Rede interna isolada — só Caddy expõe portas.
+(volume `pgdata`), `redis`, `backup` (cron + rclone). Healthchecks em todos;
+`restart: unless-stopped`. Rede interna isolada — só Caddy expõe portas.
 
 ### 8.2 CI/CD
-- GitHub Actions: build + test (xUnit API/domain, Vitest/Playwright web) →
-  build de imagens → push GHCR → deploy via SSH na VPS
-  (`docker compose pull && up -d`).
-- Migrações EF Core: aplicadas no startup da API (ou job one-shot) com lock
-  de migração — nunca via scraper.
+- GitHub Actions: `ci.yml` (build + test nas duas stacks a cada push/PR) e
+  `deploy.yml` (tag `v*` ou manual): build das 4 imagens (api, scraper, web,
+  caddy custom) → push GHCR → deploy SSH na VPS
+  (`docker compose pull && up -d`) → smoke test pós-deploy.
+- Migrações EF Core: aplicadas no startup da API com **advisory lock do
+  Postgres** (`DatabaseMigrator.MigrateWithLockAsync`) — nunca via scraper.
 
 ### 8.3 Requisitos de VPS (estimativa, revisado no M1)
 - Scraper com Chromium **completo** (necessário para Pichau/Terabyte) é o

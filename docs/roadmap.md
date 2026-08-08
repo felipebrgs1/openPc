@@ -11,7 +11,7 @@
 | M2 | Catálogo: pipeline de ingestão + API de leitura | 2–3 semanas |
 | M3 | Engine de compatibilidade | 2 semanas |
 | M4 | Frontend: catálogo + montador de PC | 3–4 semanas |
-| M5 | Deploy VPS + observabilidade | 1 semana |
+| M5 | Deploy VPS + observabilidade 🔶 (infra pronta; deploy real pendente de VPS) | 1 semana |
 | M6 | Histórico, ofertas e alertas | 2 semanas |
 | M7 | Auth, builds salvos, compartilhamento social | 2 semanas |
 
@@ -208,22 +208,62 @@ Chromium, dados reais).
 
 ---
 
-## M5 — Deploy VPS + observabilidade
+## M5 — Deploy VPS + observabilidade 🔶 (infra pronta e validada local; deploy real pendente de VPS)
 
 **Objetivo:** produção estável e operável.
 
-- [ ] Dockerfiles multi-stage (api, scraper c/ Playwright, web/nginx)
-- [ ] `docker-compose.yml` de produção + Caddy (TLS automático)
-- [ ] Pipeline CI/CD: build → GHCR → deploy SSH na VPS
-- [ ] Migrações EF no startup com lock
-- [ ] Backup diário `pg_dump` → off-site (rclone/S3) + teste de restore
-- [ ] Logs estruturados (Serilog JSON) + alerta simples de scraper quebrado
-      (run failed → webhook/email)
-- [ ] Rate limiting no Caddy, CORS restrito, headers de segurança
-- [ ] Smoke test pós-deploy automatizado
+**Resultado: toda a infraestrutura implementada e validada localmente —
+imagens buildam, stack prod completa sobe (Caddy TLS + API + web/nginx +
+scraper/Chromium + db + redis + backup), smoke test verde, rate limit 429
+no 61º req/min, restore de backup testado com dados reais (7.760 produtos).
+O deploy real na VPS e o critério de 7 dias de uptime dependem de o usuário
+fornecer o host (secrets `VPS_HOST/VPS_USER/VPS_SSH_KEY` + `VPS_DOMAIN`).**
 
-**Critério de aceite:** deploy de uma tag nova com um comando/push; restore de
-backup testado de verdade; 7 dias de uptime sem intervenção manual.
+- [x] Dockerfiles multi-stage (api, scraper c/ Playwright, web/nginx)
+- [x] `docker-compose.yml` de produção + Caddy (TLS automático)
+- [x] Pipeline CI/CD: build → GHCR → deploy SSH na VPS
+- [x] Migrações EF no startup com lock (advisory lock do Postgres)
+- [x] Backup diário `pg_dump` → off-site (rclone/S3) + teste de restore
+- [x] Logs estruturados (Serilog JSON) + alerta simples de scraper quebrado
+      (run failed → webhook/email)
+- [x] Rate limiting no Caddy, CORS restrito, headers de segurança
+- [x] Smoke test pós-deploy automatizado
+
+**Critério de aceite:** deploy de uma tag nova com um comando/push
+(workflow `deploy.yml` em tag `v*` — pronto, aguardando VPS); restore de
+backup testado de verdade ✅ (7.760 produtos restaurados localmente); 7 dias
+de uptime sem intervenção manual (depende do deploy real).
+
+**Como deployar (documentado):**
+1. `cp deploy/.env.example deploy/.env` na VPS e preencher `DOMAIN`,
+   `POSTGRES_PASSWORD`, `ALERTS_WEBHOOK_URL`, `RCLONE_*`.
+2. No GitHub: secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_DOMAIN`,
+   `VPS_APP_DIR` (default `/opt/openpc`), `GHCR_PAT` (pull de imagens privadas).
+3. Push de tag `vX.Y.Z` → pipeline build → GHCR → SSH → compose pull/up →
+   smoke test.
+
+**Achados operacionais (registrados no código/docs):**
+- **`rate_limit` não é core do Caddy** — é o módulo `mholt/caddy-ratelimit`;
+  a imagem do Caddy é custom (`deploy/caddy/Dockerfile` via xcaddy) e
+  publicada como `openpc-caddy` no GHCR junto com as demais.
+- **Bug latente de seed corrigido (M5)**: `DbSeeder` adicionava
+  categorias/lojas com `AddRange` e lia os IDs do banco **antes** do
+  `SaveChanges` — na primeira subida a API criava 0 jobs de scraping e o
+  scraper os criava depois por acidente de ordem (se o scraper atrasasse, os
+  jobs nunca existiriam). Agora persiste categorias/lojas antes de buildar os
+  jobs: API cria 8 categorias + 3 lojas + 24 jobs sozinha.
+- Scraper em produção usa a imagem oficial `mcr.microsoft.com/playwright`
+  (Ubuntu noble) com runtime .NET 10 por cima — o `runtime:10.0-alpine` não
+  suporta as libs do Chromium, e `runtime:10.0` (noble) não tem SDK para
+  `dotnet tool install` do CLI Playwright.
+- Alerta de scraper: webhook genérico (`Alerts:WebhookUrl`) com payload
+  JSON (`event`, `store`, `category`, `status`, `error`, timestamps);
+  fire-and-forget com timeout de 5 s — nunca derruba o job. Cobre Slack/
+  Discord/ntfy/gateway de e-mail; sem URL configurada, apenas loga.
+- `Logging__Format=json` no compose prod → Serilog JSON no stdout (docker
+  logs); texto em dev.
+- CORS: `Cors__AllowedOrigins` via env (vazio em prod — front é same-origin
+  via Caddy; origens de dev mantidas por default).
 
 ---
 

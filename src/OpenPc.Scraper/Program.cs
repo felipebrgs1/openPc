@@ -7,6 +7,7 @@ using OpenPc.Scraper.Jobs;
 using OpenPc.Scraper.Normalization;
 using Quartz;
 using Serilog;
+using Serilog.Formatting.Json;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -15,7 +16,15 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = Host.CreateApplicationBuilder(args);
-    builder.Services.AddSerilog((ctx, cfg) => cfg.WriteTo.Console());
+    builder.Services.AddSerilog((_, cfg) =>
+    {
+        cfg.ReadFrom.Configuration(builder.Configuration);
+        // Formato do stdout: texto em dev, JSON em produção (env Logging__Format=json).
+        if (string.Equals(builder.Configuration["Logging:Format"], "json", StringComparison.OrdinalIgnoreCase))
+            cfg.WriteTo.Console(new JsonFormatter());
+        else
+            cfg.WriteTo.Console();
+    });
 
     var conn = builder.Configuration.GetConnectionString("Default")
         ?? throw new InvalidOperationException("Connection string 'Default' não configurada.");
@@ -23,6 +32,7 @@ try
     builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(conn));
     builder.Services.AddHttpClient<KabumCollector>(c => c.DefaultRequestHeaders.UserAgent.ParseAdd(
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"));
+    builder.Services.AddHttpClient<ScrapeAlertService>(c => c.Timeout = TimeSpan.FromSeconds(5));
 
     builder.Services.AddSingleton<BrowserPool>();
     builder.Services.AddSingleton<IngestionService>();
@@ -35,7 +45,9 @@ try
 
     var host = builder.Build();
 
-    // aplica migrações + seed (jobs de scraping)
+    // seed (jobs de scraping). Migrações NÃO rodam aqui — a API aplica com
+    // advisory lock no startup; em produção o compose garante a ordem
+    // (scraper depende de api healthy).
     using (var scope = host.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

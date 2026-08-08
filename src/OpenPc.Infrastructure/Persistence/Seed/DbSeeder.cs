@@ -7,8 +7,8 @@ public static class DbSeeder
 {
     public static async Task SeedAsync(AppDbContext db, ILogger logger, CancellationToken ct = default)
     {
-        await db.Database.MigrateAsync(ct);
-
+        // Migrações NÃO rodam aqui: são aplicadas no startup da API com
+        // advisory lock (DatabaseMigrator) — nunca via scraper (specs §8.2).
         if (!await db.Categories.AnyAsync(ct))
         {
             db.Categories.AddRange(SeedData.Categories);
@@ -20,6 +20,12 @@ public static class DbSeeder
             db.Stores.AddRange(SeedData.Stores);
             logger.LogInformation("Seed: {Count} lojas inseridas", SeedData.Stores.Length);
         }
+
+        // Persiste categorias/lojas ANTES de buildar os jobs: BuildJobs consulta
+        // os ids no banco, e sem SaveChanges eles ainda não existem (bug latente:
+        // a API logava 0 jobs e o scraper os criava depois por acidente de ordem).
+        if (db.ChangeTracker.HasChanges())
+            await db.SaveChangesAsync(ct);
 
         if (!await db.ScrapeJobs.AnyAsync(ct))
         {

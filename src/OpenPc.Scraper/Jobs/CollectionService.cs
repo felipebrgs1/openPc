@@ -13,6 +13,7 @@ public sealed class CollectionService(
     AppDbContext db,
     IEnumerable<IStoreCollector> collectors,
     IngestionService ingestion,
+    ScrapeAlertService alert,
     ILogger<CollectionService> logger)
 {
     public async Task RunJobAsync(Guid jobId, CancellationToken ct)
@@ -59,6 +60,9 @@ public sealed class CollectionService(
         }
 
         await db.SaveChangesAsync(ct);
+
+        if (run.Status == "failed")
+            await alert.SendRunFailedAsync(run, job, ct);
     }
 
     /// <summary>Executa imediatamente os jobs habilitados (run-once).</summary>

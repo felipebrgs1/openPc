@@ -1,0 +1,144 @@
+# ============================================================
+# OpenPC — produção (M5)
+#
+# Uso na VPS (imagens do GHCR):
+#   cp deploy/.env.example deploy/.env   # preencher DOMAIN, senhas...
+#   docker compose -f deploy/docker-compose.yml up -d
+#
+# Uso local (build das imagens em vez de pull):
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+#
+# Apenas o Caddy expõe portas (80/443) — rede interna isolada.
+# ============================================================
+
+name: openpc
+
+services:
+  caddy:
+    image: ghcr.io/felipebrgs1/openpc-caddy:${IMAGE_TAG:-latest}
+    build:
+      context: ./caddy
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN obrigatorio}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - api
+
+  web:
+    image: ghcr.io/felipebrgs1/openpc-web:${IMAGE_TAG:-latest}
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  api:
+    image: ghcr.io/felipebrgs1/openpc-api:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: src/OpenPc.Api/Dockerfile
+      target: final
+    restart: unless-stopped
+    environment:
+      ConnectionStrings__Default: Host=db;Port=5432;Database=openpc;Username=openpc;Password=${POSTGRES_PASSWORD}
+      Redis__ConnectionString: redis:6379
+      # Front servido no mesmo domínio pelo Caddy → CORS não é necessário.
+      Cors__AllowedOrigins: ${CORS_ALLOWED_ORIGINS:-}
+      Logging__Format: json
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/api/v1/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  scraper:
+    image: ghcr.io/felipebrgs1/openpc-scraper:${IMAGE_TAG:-latest}
+    build:
+      context: ..
+      dockerfile: src/OpenPc.Scraper/Dockerfile
+      target: final
+    restart: unless-stopped
+    environment:
+      ConnectionStrings__Default: Host=db;Port=5432;Database=openpc;Username=openpc;Password=${POSTGRES_PASSWORD}
+      Alerts__WebhookUrl: ${ALERTS_WEBHOOK_URL:-}
+      Logging__Format: json
+    depends_on:
+      db:
+        condition: service_healthy
+      # Migrações rodam na API (advisory lock) — scraper só sobe depois.
+      api:
+        condition: service_healthy
+
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: openpc
+      POSTGRES_USER: openpc
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      # PG 18+: mount em /var/lib/postgresql (dados ficam em subdiretório
+      # major-version — permite pg_upgrade sem quebra de mount).
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openpc -d openpc"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backup:
+    image: ghcr.io/felipebrgs1/openpc-backup:${IMAGE_TAG:-latest}
+    build:
+      context: ./backup
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGDATABASE: openpc
+      PGUSER: openpc
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      # Off-site via rclone: preencher em deploy/.env
+      RCLONE_REMOTE: ${RCLONE_REMOTE:-}
+      RCLONE_S3_ACCESS_KEY_ID: ${RCLONE_S3_ACCESS_KEY_ID:-}
+      RCLONE_S3_SECRET_ACCESS_KEY: ${RCLONE_S3_SECRET_ACCESS_KEY:-}
+      RCLONE_S3_REGION: ${RCLONE_S3_REGION:-sa-east-1}
+      RCLONE_S3_ENDPOINT: ${RCLONE_S3_ENDPOINT:-}
+    volumes:
+      - backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+  backups:
