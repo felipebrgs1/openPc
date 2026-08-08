@@ -34,7 +34,20 @@ public static partial class SpecExtractor
         Set(specs, "tdp_w", FirstMatch(text, Tdp()) ?? FirstMatch(title, Tdp()));
         Set(specs, "length_mm", FirstMatch(text, DimensionsMm()));
         Set(specs, "power_connectors", FirstMatch(text, PowerConnectors()));
+        Set(specs, "series", GpuSeries.Classify(title)); // filtro de catálogo, não engine
 
+        return specs;
+    }
+
+    /// <summary>
+    /// Specs essenciais de memória RAM a partir do título. Chaves do contrato
+    /// §3.2; hoje só `type` (ddr4|ddr5) é extraído — alimenta o filtro de
+    /// catálogo e futuras regras da engine (RAM_TYPE_MISMATCH).
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> ExtractMemory(string title)
+    {
+        var specs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        Set(specs, "type", FirstMatch(title, MemoryType())?.ToLowerInvariant());
         return specs;
     }
 

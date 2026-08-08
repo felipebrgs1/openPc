@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using OpenPc.Domain.Entities;
 using OpenPc.Infrastructure.Persistence;
 using OpenPc.Infrastructure.Persistence.Seed;
 using OpenPc.Infrastructure.Prices;
@@ -136,6 +137,57 @@ try
 
         logger.LogInformation("cleanup-noise: {Count} produtos removidos ({Category})",
             toDelete.Count, category ?? "todas as categorias");
+        Log.CloseAndFlush();
+        return;
+    }
+
+    if (args.Length > 0 && args[0] == "backfill-attributes")
+    {
+        // Calcula atributos de catálogo (série de GPU, tipo de memória) para
+        // produtos ingeridos antes dos extractors existirem — mesmo código da
+        // ingestão (SpecExtractor/GpuSeries). Não coleta nada. Upsert idempotente:
+        // só adiciona quando a chave ainda não existe no produto.
+        await using var scope = host.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("BackfillAttributes");
+
+        var products = await db.Products
+            .Include(p => p.Category)
+            .Include(p => p.Attributes)
+            .Where(p => p.Category.Slug == "gpu" || p.Category.Slug == "memory")
+            .ToListAsync(CancellationToken.None);
+
+        var added = 0;
+        var byValue = new SortedDictionary<string, int>();
+        foreach (var product in products)
+        {
+            var (key, value) = product.Category.Slug switch
+            {
+                "gpu" => ("series", GpuSeries.Classify(product.Name)),
+                "memory" => ("type",
+                    SpecExtractor.ExtractMemory(product.Name).TryGetValue("type", out var t) ? t : null),
+                _ => ((string?)null, (string?)null),
+            };
+            if (key is null || value is null || product.Attributes.Any(a => a.Key == key))
+                continue;
+
+            db.ProductAttributes.Add(new ProductAttribute
+            {
+                Id = Guid.NewGuid(),
+                ProductId = product.Id,
+                Key = key,
+                ValueText = value,
+            });
+            byValue[$"{key}={value}"] = byValue.GetValueOrDefault($"{key}={value}") + 1;
+            added++;
+        }
+
+        await db.SaveChangesAsync(CancellationToken.None);
+
+        foreach (var (k, v) in byValue)
+            logger.LogInformation("backfill-attributes: {Key}: {Count} produtos", k, v);
+        logger.LogInformation("backfill-attributes: {Count} atributos adicionados", added);
         Log.CloseAndFlush();
         return;
     }

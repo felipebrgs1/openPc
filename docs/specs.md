@@ -129,7 +129,7 @@ Chaves por categoria (contrato da engine, ver §4):
 |---|---|
 | cpu | `socket`, `tdp_w`, `memory_type` (ddr4\|ddr5\|ambos), `has_igpu`, `pcie_lanes`, `max_memory_speed` |
 | motherboard | `socket`, `chipset`, `form_factor` (atx\|matx\|itx), `memory_type`, `memory_slots`, `max_memory_gb`, `m2_slots`, `sata_ports`, `pcie_x16_gen`, `bios_support` (JSON: gerações de CPU suportadas) |
-| gpu | `length_mm`, `slots`, `tdp_w`, `power_connectors` (ex: `2x8pin`, `1x16pin`), `recommended_psu_w` |
+| gpu | `length_mm`, `slots`, `tdp_w`, `power_connectors` (ex: `2x8pin`, `1x16pin`), `recommended_psu_w`; `series` (rtx20\|rtx30\|rtx40\|rtx50\|gtx16\|rx5000\|rx6000\|rx7000\|rx9000\|arc) é filtro de catálogo, não usada pela engine |
 | memory | `type` (ddr4\|ddr5), `modules`, `capacity_gb`, `speed_mhz`, `height_mm` |
 | storage | `interface` (nvme\|sata), `form_factor` (m2_2280\|2.5\|3.5), `capacity_gb`, `pcie_gen` |
 | psu | `wattage`, `efficiency` (80plus...), `modular`, `connectors` (JSON) |

@@ -35,17 +35,16 @@
         </select>
       </div>
 
-      @if (category() === 'cpu' || category() === 'motherboard') {
+      @if (attrFilter(); as f) {
         <div>
-          <label for="f-socket" class="mb-1 block text-xs font-medium text-zinc-500">
-            Socket
+          <label for="f-attr" class="mb-1 block text-xs font-medium text-zinc-500">
+            {{ f.label }}
           </label>
-          <select id="f-socket" [value]="socket()" (change)="onSocketChange($event)" class="input">
+          <select id="f-attr" [value]="attrValue()" (change)="onAttrChange($event)" class="input">
             <option value="">Todos</option>
-            <option value="am4">AM4</option>
-            <option value="am5">AM5</option>
-            <option value="lga 1700">LGA 1700</option>
-            <option value="lga 1851">LGA 1851</option>
+            @for (opt of f.options; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
           </select>
         </div>
       }

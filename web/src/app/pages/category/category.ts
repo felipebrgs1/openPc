@@ -5,6 +5,12 @@ import type { Category as CategoryDto, ProductsResponse } from '../../api';
 import { Seo } from '../../seo';
 import { formatBRL } from '../../format';
 
+interface AttrFilter {
+  key: string;
+  label: string;
+  options: { value: string; label: string }[];
+}
+
 @Component({
   selector: 'app-category',
   imports: [RouterLink],
@@ -17,10 +23,61 @@ export class Category {
 
   protected readonly query = signal('');
   protected readonly sort = signal('price_asc');
-  protected readonly socket = signal('');
   protected readonly minPrice = signal<number | null>(null);
   protected readonly maxPrice = signal<number | null>(null);
   protected readonly limit = signal(24);
+
+  /** Valor selecionado no filtro de atributo (socket, série, tipo...). */
+  protected readonly attrValue = signal('');
+
+  /** Configuração do filtro de atributo por categoria (null = sem filtro). */
+  protected readonly attrFilter = computed<AttrFilter | null>(() => {
+    switch (this.category()) {
+      case 'cpu':
+      case 'motherboard':
+        return {
+          key: 'socket',
+          label: 'Socket',
+          options: [
+            { value: 'am4', label: 'AM4' },
+            { value: 'am5', label: 'AM5' },
+            { value: 'lga 1700', label: 'LGA 1700' },
+            { value: 'lga 1851', label: 'LGA 1851' },
+          ],
+        };
+      case 'gpu':
+        return {
+          key: 'series',
+          label: 'Série',
+          options: [
+            { value: 'rtx20', label: 'RTX 20' },
+            { value: 'rtx30', label: 'RTX 30' },
+            { value: 'rtx40', label: 'RTX 40' },
+            { value: 'rtx50', label: 'RTX 50' },
+            { value: 'gtx16', label: 'GTX 16' },
+            { value: 'rx5000', label: 'RX 5000' },
+            { value: 'rx6000', label: 'RX 6000' },
+            { value: 'rx7000', label: 'RX 7000' },
+            { value: 'rx9000', label: 'RX 9000' },
+            { value: 'arc', label: 'Arc' },
+          ],
+        };
+      case 'memory':
+        return {
+          key: 'type',
+          label: 'Tipo',
+          options: [
+            { value: 'ddr4', label: 'DDR4' },
+            { value: 'ddr5', label: 'DDR5' },
+          ],
+        };
+      default:
+        return null;
+    }
+  });
+
+  /** Chave do filtro de atributo vigente — para resetar o valor na troca de categoria. */
+  private attrKey: string | null = null;
 
   private readonly categories = httpResource<CategoryDto[]>(() => '/api/v1/categories');
 
@@ -38,8 +95,9 @@ export class Category {
     });
     const q = this.query().trim();
     if (q) params.set('q', q);
-    const socket = this.socket();
-    if (socket) params.set('attrs[socket]', socket);
+    const attr = this.attrFilter();
+    const attrVal = this.attrValue();
+    if (attr && attrVal) params.set(`attrs[${attr.key}]`, attrVal);
     const min = this.minPrice();
     const max = this.maxPrice();
     if (min != null) params.set('minPrice', String(min));
@@ -66,13 +124,14 @@ export class Category {
     this.seo.set('Peças de PC');
 
     // Troca de categoria (a rota /pecas/:category reutiliza a instância):
-    // zera o socket ao sair de cpu/motherboard (o select some e o filtro
-    // ficaria invisível — GPU sem socket filtraria para lista vazia) e
-    // descarta o lastGood da categoria anterior (senão a lista antiga
-    // pisca durante o load da nova).
+    // reseta o valor do filtro de atributo quando a chave muda (socket →
+    // série → type; o valor de uma categoria não pode vazar para outra com
+    // filtro diferente — ex.: AM5 enviado como attrs[series]) e descarta o
+    // lastGood da categoria anterior (senão a lista antiga pisca no load).
     effect(() => {
-      const cat = this.category();
-      if (cat !== 'cpu' && cat !== 'motherboard') this.socket.set('');
+      const f = this.attrFilter();
+      if (!f || f.key !== this.attrKey) this.attrValue.set('');
+      this.attrKey = f?.key ?? null;
       this.lastGood.set(null);
     });
 
@@ -101,7 +160,7 @@ export class Category {
     this.minPrice.set(null);
     this.maxPrice.set(null);
     this.sort.set('price_asc');
-    this.socket.set('');
+    this.attrValue.set('');
     this.limit.set(24);
   }
 
@@ -114,8 +173,8 @@ export class Category {
     this.sort.set((event.target as HTMLSelectElement).value);
   }
 
-  protected onSocketChange(event: Event): void {
-    this.socket.set((event.target as HTMLSelectElement).value);
+  protected onAttrChange(event: Event): void {
+    this.attrValue.set((event.target as HTMLSelectElement).value);
     this.limit.set(24);
   }
 
