@@ -39,6 +39,11 @@ testem.log
 /typings
 __screenshots__/
 
+# Cloudflare / wrangler (cenário 3)
+.dev.vars
+!.dev.vars.example
+.wrangler/
+
 # System files
 .DS_Store
 Thumbs.db

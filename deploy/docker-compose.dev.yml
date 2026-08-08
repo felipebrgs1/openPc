@@ -1,10 +1,24 @@
 # ============================================================
 # OpenPC — ambiente de desenvolvimento (M0)
 #
-# Subir a stack inteira:
+# Stack inteira:
 #   docker compose -f deploy/docker-compose.dev.yml up --build -d
 #
-# URLs:
+# Cenário 1 — só a API (db + redis + api; reusa o banco de dev):
+#   docker compose -f deploy/docker-compose.dev.yml up -d --build db redis api
+#
+# Cenário 2 — só o scraper (db + migrate one-shot + scraper; o schema é
+#   criado pelo serviço `migrate`, que roda a API com --migrate-only):
+#   docker compose -f deploy/docker-compose.dev.yml up -d --build db scraper
+#   # coleta manual (ex: Kabum, categoria cpu):
+#   docker compose -f deploy/docker-compose.dev.yml exec scraper \
+#     dotnet run --project src/OpenPc.Scraper/OpenPc.Scraper.csproj -- run-once kabum cpu
+#
+# Cenário 3 — front na Cloudflare Worker (detalhes em web/wrangler.jsonc):
+#   cd web && npm run dev:cf     # local: http://localhost:8787 (/api -> localhost:5080)
+#   cd web && npm run deploy:cf  # publica na Cloudflare
+#
+# URLs (stack inteira):
 #   web   -> http://localhost:4200  (Angular dev server + HMR)
 #   api   -> http://localhost:5080  (health: /api/v1/health)
 #   db    -> localhost:5432  (openpc / openpc / openpc_dev)
@@ -87,6 +101,21 @@ services:
       api:
         condition: service_started
 
+  # One-shot: aplica migrations + seed (API com --migrate-only) e encerra.
+  # Em runtime a API é quem migra; aqui só preparamos o banco para o
+  # cenário "só scraper" (scraper não roda migrations — decisão M2).
+  migrate:
+    build:
+      context: ..
+      dockerfile: src/OpenPc.Api/Dockerfile
+      target: final
+    entrypoint: ["dotnet", "OpenPc.Api.dll", "--migrate-only"]
+    environment:
+      ConnectionStrings__Default: Host=db;Port=5432;Database=openpc;Username=openpc;Password=openpc_dev
+    depends_on:
+      db:
+        condition: service_healthy
+
   scraper:
     build:
       context: ..
@@ -107,6 +136,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   pgdata:

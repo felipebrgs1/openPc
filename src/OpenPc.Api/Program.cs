@@ -84,6 +84,15 @@ try
         await DbSeeder.SeedAsync(db, logger);
     }
 
+    // Modo one-shot: aplica migrations + seed e encerra. Usado pelo serviço
+    // `migrate` do compose (cenário "só scraper") para criar o schema sem
+    // subir a API — a API segue sendo a dona das migrações em runtime.
+    if (args.Contains("--migrate-only"))
+    {
+        Log.Information("--migrate-only: schema aplicado e seed concluído. Encerrando.");
+        return;
+    }
+
     app.Run();
 }
 catch (Exception ex) when (ex is not OperationCanceledException)

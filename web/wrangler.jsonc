@@ -1,0 +1,37 @@
+{
+  // ============================================================
+  // OpenPC web — Cloudflare Worker (cenário 3)
+  //
+  // Serve o SPA Angular (dist/web/browser) via Workers Static Assets e
+  // faz proxy de /api/* para a API (API_ORIGIN) — o front usa caminhos
+  // relativos, então o Worker decide o destino (ver worker/index.ts).
+  //
+  // Local (proxy /api -> API local do cenário 1, porta 5080):
+  //   cp .dev.vars.example .dev.vars
+  //   npm run dev:cf          # http://localhost:8787
+  //
+  // Publicar (API real = VPS; o Caddy roteia /api/* para o serviço api):
+  //   npm run deploy:cf
+  //   # com outra origem: npm run deploy:cf -- --var API_ORIGIN:https://openpc.example.com
+  //
+  // Requer: wrangler autenticado (wrangler login) e o build em
+  // dist/web/browser — os scripts dev:cf/deploy:cf rodam `npm run build`
+  // antes do wrangler.
+  // ============================================================
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "openpc-web",
+  "main": "worker/index.ts",
+  "account_id": "78fedbeba68de80a823e65652da5f2c5",
+  "compatibility_date": "2026-07-01",
+  "assets": {
+    "directory": "./dist/web/browser",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "vars": {
+    "API_ORIGIN": "https://openpc.example.com"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

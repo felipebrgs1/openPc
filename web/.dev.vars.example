@@ -1,0 +1,4 @@
+# API de destino do proxy /api (cenário 3 — wrangler dev).
+# Copie para .dev.vars: sobrescreve API_ORIGIN do wrangler.jsonc no dev local.
+# Aponte para a API do cenário 1 (http://localhost:5080) ou outra que esteja rodando.
+API_ORIGIN=http://localhost:5080
