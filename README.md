@@ -234,11 +234,30 @@ descartável.
 ## CI/CD
 
 - `.github/workflows/ci.yml` — `dotnet restore/build/test` + build do Angular
-  em todo push para `main` e pull request.
-- `.github/workflows/deploy.yml` — deploy de produção disparado por tag
-  `v*`: build das imagens → GHCR → deploy SSH na VPS → smoke test
-  (`deploy/smoke-test.sh`: health, categorias, produtos, scrapers, criação de
-  build e SPA servida).
+  em todo push para `main` e pull request (portão de qualidade).
+- `.github/workflows/deploy.yml` — deploy de produção disparado por tag `v*`
+  ou manualmente (`workflow_dispatch`): build das imagens (api, backup, web,
+  arm64) → GHCR → deploy SSH na VPS → smoke test (`deploy/smoke-test.sh`:
+  health, categorias, produtos, scrapers, foto do MinIO, criação de build e
+  SPA servida). O scraper **não** é buildado aqui — a coleta não roda na VPS.
+
+### Proteção da `main` (regras de contribuição)
+
+A branch `main` é protegida: **push direto bloqueado para todos** (inclusive
+admins) — mudanças só via **pull request** com a CI verde (`.NET build +
+test` e `Angular build`). Force push e deleção de branch são proibidos; a
+branch de trabalho é removida após o merge (squash).
+
+```bash
+git checkout -b minha-mudanca
+git add . && git commit -m "..."
+git push -u origin minha-mudanca
+gh pr create --fill      # CI roda; merge só com checks verdes
+gh pr merge --squash
+```
+
+> ⚠️ **Pushear uma tag `v*` (ou disparar o workflow Deploy manualmente)
+> deploya para produção** — não faça isso sem intenção.
 
 ## Testes
 
