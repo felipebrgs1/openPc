@@ -1,8 +1,9 @@
 name: Deploy
 
 # Deploy de produção: disparado por tag v* (deploy de uma tag nova com
-# um push) ou manualmente. Build das 3 imagens → push GHCR → deploy SSH
-# na VPS (compose pull + up) → smoke test pós-deploy.
+# um push) ou manualmente. Build das imagens (api, backup, web) → push
+# GHCR → deploy SSH na VPS (compose pull + up) → smoke test pós-deploy.
+# O scraper não é buildado aqui (coleta não roda na VPS).
 
 on:
   push:
@@ -55,19 +56,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build e push — scraper
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: src/OpenPc.Scraper/Dockerfile
-          platforms: linux/arm64
-          target: final
-          push: true
-          tags: |
-            ${{ env.IMAGE_BASE }}/openpc-scraper:${{ steps.tag.outputs.tag }}
-            ${{ env.IMAGE_BASE }}/openpc-scraper:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      # Scraper não é buildado aqui: a coleta não roda na VPS (compose sem o
+      # serviço). A imagem é construída localmente quando necessário
+      # (ex: docker build -f src/OpenPc.Scraper/Dockerfile ... sync-images).
 
       - name: Build e push — backup (pg_dump + rclone)
         uses: docker/build-push-action@v6
