@@ -57,8 +57,9 @@ echo "ok   GET /api/v1/products (limit=3)"
 curl_ok "/api/v1/health/scrapers" "GET /api/v1/health/scrapers"
 
 # Fotos: produto com imagem própria (/images/* → MinIO via Caddy)
+# grep -m1 (sem head) evita SIGPIPE com pipefail
 img=$(curl -sS "${CURL_EXTRA[@]}" --max-time 15 "${BASE_URL}/api/v1/products?limit=100" \
-    | grep -o '"/images/[a-f0-9]\{40\}\.[a-z0-9]*"' | head -1 | tr -d '"')
+    | grep -om1 '"/images/[a-f0-9]\{40\}\.[a-z0-9]*"' | tr -d '"')
 if [ -n "${img}" ]; then
     curl_ok "${img}" "GET ${img}"
     echo "ok   foto servida do MinIO (${img})"
