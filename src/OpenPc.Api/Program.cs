@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using OpenPc.Api.Endpoints;
 using OpenPc.Infrastructure;
@@ -42,11 +43,41 @@ try
     }
     builder.Services.AddOpenApi();
 
+    // Rate limiting por IP — substitui o módulo custom do Caddy (a imagem
+    // padrão caddy:2-alpine não tem rate_limit). Fixed window por IP em
+    // /api/* (60 req/min default, configurável via RateLimit:ApiPerMinute);
+    // o restante (openapi) não é limitado.
+    builder.Services.AddRateLimiter(o =>
+    {
+        o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        var permitLimit = builder.Configuration.GetValue("RateLimit:ApiPerMinute", 60);
+        o.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+        {
+            if (!ctx.Request.Path.StartsWithSegments("/api"))
+                return RateLimitPartition.GetNoLimiter("bypass");
+            return RateLimitPartition.GetFixedWindowLimiter(
+                ClientIp(ctx),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = permitLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                    AutoReplenishment = true,
+                });
+        });
+        o.OnRejected = (ctx, _) =>
+        {
+            ctx.HttpContext.Response.Headers.RetryAfter = "60";
+            return ValueTask.CompletedTask;
+        };
+    });
+
     var app = builder.Build();
 
     app.UseSerilogRequestLogging();
     if (corsOrigins.Length > 0)
         app.UseCors();
+    app.UseRateLimiter();
     app.MapOpenApi();
     app.MapCatalogEndpoints();
     app.MapBuildEndpoints();
@@ -103,6 +134,23 @@ catch (Exception ex) when (ex is not OperationCanceledException)
 finally
 {
     Log.CloseAndFlush();
+}
+
+/// <summary>
+/// IP do cliente real para o rate limiter: último X-Forwarded-For (o Caddy
+/// anexa o IP do cliente ao final) → IP da conexão.
+///
+/// CF-Connecting-IP NÃO é confiável aqui: o Caddy repassa headers do cliente
+/// sem validar, então um atacante mandaria um CF-Connecting-IP falso por
+/// request e burlaria o rate limit (particionamento por IP spoofed).
+/// </summary>
+static string ClientIp(HttpContext ctx)
+{
+    var xff = ctx.Request.Headers["X-Forwarded-For"].LastOrDefault();
+    if (!string.IsNullOrWhiteSpace(xff))
+        return xff.Split(',')[^1].Trim();
+
+    return ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 }
 
 internal sealed record HealthResponse(string Status, string Database);

@@ -75,18 +75,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build e push — caddy (com rate_limit)
-        uses: docker/build-push-action@v6
-        with:
-          context: deploy/caddy
-          file: deploy/caddy/Dockerfile
-          push: true
-          tags: |
-            ${{ env.IMAGE_BASE }}/openpc-caddy:${{ steps.tag.outputs.tag }}
-            ${{ env.IMAGE_BASE }}/openpc-caddy:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
       - name: Build e push — web
         uses: docker/build-push-action@v6
         with:

@@ -22,11 +22,11 @@ Findings de scraping: [`docs/scraping-findings.md`](docs/scraping-findings.md)
 | Camada | Tecnologia |
 |---|---|
 | `web` | Angular 22 (zoneless, signals, standalone) + Tailwind v4 |
-| `api` | ASP.NET Core 10, EF Core 10, Minimal APIs |
+| `api` | ASP.NET Core 10, EF Core 10, Minimal APIs, rate limiting por IP |
 | `scraper` | .NET 10 Worker Service + Playwright (Chromium) |
 | `db` | PostgreSQL 18 |
 | `redis` | Redis 8 (cache de listagens) |
-| `caddy` | Caddy 2 + mholt/caddy-ratelimit (TLS, proxy, rate limit) |
+| `caddy` | Caddy 2 (imagem padrão — TLS, proxy) |
 | `backup` | pg_dump + rclone → S3 (off-site) |
 
 ## Estrutura do monorepo
@@ -127,8 +127,11 @@ apertado).
 2. No GitHub, configure os secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`,
    `VPS_DOMAIN`, `VPS_APP_DIR` (default `/opt/openpc`), `GHCR_PAT`.
 3. Push de uma tag `vX.Y.Z` → o workflow `.github/workflows/deploy.yml`
-   builda as imagens (api, scraper, web, caddy, backup) → GHCR → SSH na VPS
-   (`compose pull && up`) → smoke test pós-deploy.
+   builda as imagens (api, scraper, web, backup) → GHCR → SSH na VPS
+   (`compose pull && up`) → smoke test pós-deploy. O Caddy usa a imagem
+   padrão `caddy:2-alpine` (sem build) e o **rate limit por IP (60 req/min
+   em `/api/*`, 429) vive na API** — ASP.NET RateLimiter, configurável via
+   `RateLimit__ApiPerMinute`.
 
 Para subir localmente (build em vez de pull):
 

@@ -15,10 +15,9 @@ name: openpc
 
 services:
   caddy:
-    image: ghcr.io/felipebrgs1/openpc-caddy:${IMAGE_TAG:-latest}
-    build:
-      context: ./caddy
-      dockerfile: Dockerfile
+    # Imagem padrão (sem módulos custom) — o rate limit por IP vive na API
+    # (ASP.NET RateLimiter, 60 req/min em /api/*).
+    image: caddy:2-alpine
     restart: unless-stopped
     ports:
       - "80:80"

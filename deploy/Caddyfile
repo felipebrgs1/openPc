@@ -1,12 +1,12 @@
 # OpenPC — Caddy (produção)
-# TLS automático (Let's Encrypt), reverse proxy e rate limiting.
+# TLS automático (Let's Encrypt) + reverse proxy. Imagem padrão caddy:2-alpine
+# (sem build custom — o rate limit por IP vive na API, ASP.NET RateLimiter).
 #
 # Rotas:
 #   /api/*  → api:8080
 #   /*      → web:80 (SPA)
 #
 # DOMAIN vem do ambiente (compose seta de deploy/.env).
-# rate_limit é o módulo mholt/caddy-ratelimit (imagem custom em deploy/caddy).
 
 {$DOMAIN} {
     encode zstd gzip
@@ -19,25 +19,6 @@
         Referrer-Policy "strict-origin-when-cross-origin"
         Permissions-Policy "camera=(), microphone=(), geolocation=()"
         -Server
-    }
-
-    # Rate limiting (mholt/caddy-ratelimit):
-    #   api    — 60 req/min por IP em /api/* (proteção contra abuso)
-    #   global — 300 req/min por IP no restante do site
-    rate_limit {
-        zone api {
-            match {
-                path /api/*
-            }
-            key    {remote_host}
-            events 60
-            window 1m
-        }
-        zone global {
-            key    {remote_host}
-            events 300
-            window 1m
-        }
     }
 
     reverse_proxy /api/* api:8080

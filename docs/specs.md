@@ -413,8 +413,7 @@ gestão de seeds de compatibilidade.
 deploy/
   docker-compose.yml          # produção (VPS)
   docker-compose.dev.yml      # desenvolvimento local
-  Caddyfile                   # TLS + reverse proxy + rate limit
-  caddy/Dockerfile            # Caddy custom (módulo mholt/caddy-ratelimit)
+  Caddyfile                   # TLS + reverse proxy (imagem padrão caddy:2-alpine)
   backup/Dockerfile           # pg_dump diário + rclone (cron 03:30 UTC)
   backup/pg-backup.sh         # pg_dump → /backups + retenção + off-site
   backup/pg-restore.sh        # teste de restore (banco efêmero)
@@ -453,7 +452,7 @@ Compose de produção: `caddy` (80/443), `web`, `api`, `scraper`, `db`
 | Observabilidade | Serilog → JSON no stdout; OpenTelemetry (traces API) exportando para Grafana/Prometheus em container (fase 5) |
 | Cache | Redis para `GET /products` (TTL 5 min) e resultado de compatibilidade por build; invalidação no re-scrape |
 | Integridade de preço | Nunca sobrescrever histórico; preço atual = view/projeção sobre último registro |
-| Segurança | Rate limit na API (Caddy + middleware), CORS restrito ao domínio do front, secrets via `.env` fora do repo / Docker secrets |
+| Segurança | Rate limit por IP na API (ASP.NET RateLimiter, fixed window 60/min em /api/*), CORS restrito ao domínio do front, secrets via `.env` fora do repo / Docker secrets |
 | Backup | `pg_dump` diário comprimido, retenção 14 dias, off-site via rclone |
 | Testes | Domínio (compatibilidade) com cobertura alta — é o coração do produto; scrapers com fixtures HTML versionadas (não bater na loja em teste) |
 

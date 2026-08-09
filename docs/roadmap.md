@@ -226,7 +226,8 @@ fornecer o host (secrets `VPS_HOST/VPS_USER/VPS_SSH_KEY` + `VPS_DOMAIN`).**
 - [x] Backup diário `pg_dump` → off-site (rclone/S3) + teste de restore
 - [x] Logs estruturados (Serilog JSON) + alerta simples de scraper quebrado
       (run failed → webhook/email)
-- [x] Rate limiting no Caddy, CORS restrito, headers de segurança
+- [x] Rate limiting por IP na API (ASP.NET RateLimiter, 60 req/min em /api/*),
+      CORS restrito, headers de segurança
 - [x] Smoke test pós-deploy automatizado
 
 **Critério de aceite:** deploy de uma tag nova com um comando/push
@@ -243,9 +244,10 @@ de uptime sem intervenção manual (depende do deploy real).
    smoke test.
 
 **Achados operacionais (registrados no código/docs):**
-- **`rate_limit` não é core do Caddy** — é o módulo `mholt/caddy-ratelimit`;
-  a imagem do Caddy é custom (`deploy/caddy/Dockerfile` via xcaddy) e
-  publicada como `openpc-caddy` no GHCR junto com as demais.
+- **`rate_limit` não é core do Caddy** — exigia o módulo `mholt/caddy-ratelimit`
+  e imagem custom via xcaddy; **movido para a API** (ASP.NET RateLimiter,
+  60 req/min por IP em `/api/*`, 429 + Retry-After) e o Caddy voltou à imagem
+  padrão `caddy:2-alpine` (sem build custom).
 - **Bug latente de seed corrigido (M5)**: `DbSeeder` adicionava
   categorias/lojas com `AddRange` e lia os IDs do banco **antes** do
   `SaveChanges` — na primeira subida a API criava 0 jobs de scraping e o
