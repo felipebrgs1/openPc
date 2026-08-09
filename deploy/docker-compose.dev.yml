@@ -66,8 +66,12 @@ services:
       dockerfile: src/OpenPc.Api/Dockerfile
       target: development
     environment:
-      ConnectionStrings__Default: Host=db;Port=5432;Database=openpc;Username=openpc;Password=openpc_dev
+      # Banco REAL da VPS 2 via túnel SSH local (systemd user: openpc-tunnel).
+      # Senha em deploy/.env (OPENPC_DB_PASSWORD) — nunca no git.
+      ConnectionStrings__Default: Host=host.docker.internal;Port=5433;Database=openpc;Username=openpc;Password=${OPENPC_DB_PASSWORD}
       Redis__ConnectionString: redis:6379
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "5080:8080"
     volumes:
@@ -83,8 +87,6 @@ services:
       - /src/src/OpenPc.Infrastructure/obj
       - /src/src/OpenPc.Scraper/obj
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
 
