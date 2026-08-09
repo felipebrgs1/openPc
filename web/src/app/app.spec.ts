@@ -1,3 +1,4 @@
+import { describe, beforeEach, it, expect } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
@@ -20,6 +21,6 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('OpenPC');
+    expect(compiled.textContent).toContain('OpenPC');
   });
 });

@@ -1,0 +1,19 @@
+{
+  "name": "OpenPC — Monte seu PC comparando preços",
+  "short_name": "OpenPC",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#3a1d59",
+  "background_color": "#3a1d59",
+  "display": "standalone"
+}
