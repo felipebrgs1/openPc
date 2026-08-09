@@ -3,5 +3,11 @@
     "target": "http://api:8080",
     "secure": false,
     "changeOrigin": true
+  },
+  "/images": {
+    "target": "http://minio:9000",
+    "pathRewrite": { "^/images": "/openpc-images" },
+    "secure": false,
+    "changeOrigin": true
   }
 }

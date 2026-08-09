@@ -21,8 +21,22 @@
         -Server
     }
 
-    reverse_proxy /api/* api:8080
-    reverse_proxy web:80
+    # API
+    handle /api/* {
+        reverse_proxy api:8080
+    }
+
+    # Fotos do catálogo — bucket MinIO público de leitura (openpc-images).
+    # /images/{key} → GET minio:9000/openpc-images/{key}
+    handle_path /images/* {
+        rewrite * /openpc-images{path}
+        reverse_proxy minio:9000
+    }
+
+    # SPA (fallback)
+    handle {
+        reverse_proxy web:80
+    }
 
     log {
         output stdout

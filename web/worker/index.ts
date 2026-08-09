@@ -2,13 +2,14 @@
  * OpenPC web — Cloudflare Worker (cenário 3).
  *
  * Serve o SPA Angular (dist/web/browser via Workers Static Assets) e faz
- * proxy de /api/* para a API (env.API_ORIGIN). O front chama a API com
- * caminhos relativos (/api/v1/...), então o Worker decide o destino:
- *   - /api/*  -> API_ORIGIN (mesma path e query)
- *   - demais  -> assets estáticos (fallback SPA via not_found_handling)
+ * proxy de /api/* e /images/* (fotos do MinIO servidas pelo Caddy da VPS)
+ * para a origem backend (env.API_ORIGIN). O front usa caminhos relativos,
+ * então o Worker decide o destino:
+ *   - /api/*, /images/*  -> API_ORIGIN (mesma path e query)
+ *   - demais            -> assets estáticos (fallback SPA via not_found_handling)
  *
- * Config: web/wrangler.jsonc — `run_worker_first: ["/api/*"]` garante que
- * só as rotas de API passam pelo Worker; o resto é servido direto dos assets.
+ * Config: web/wrangler.jsonc — `run_worker_first: ["/api/*", "/images/*"]`
+ * garante que essas rotas passam pelo Worker; o resto é servido dos assets.
  */
 
 export interface Env {
@@ -22,14 +23,14 @@ export interface Env {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname.startsWith('/api/')) {
-      return proxyApi(request, env);
+    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/images/')) {
+      return proxyOrigin(request, env);
     }
     return env.ASSETS.fetch(request);
   },
 };
 
-async function proxyApi(request: Request, env: Env): Promise<Response> {
+async function proxyOrigin(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const target = new URL(env.API_ORIGIN);
   target.pathname = url.pathname;

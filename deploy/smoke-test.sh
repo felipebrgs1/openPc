@@ -56,6 +56,17 @@ echo "ok   GET /api/v1/products (limit=3)"
 # API: health dos scrapers
 curl_ok "/api/v1/health/scrapers" "GET /api/v1/health/scrapers"
 
+# Fotos: produto com imagem própria (/images/* → MinIO via Caddy)
+img=$(curl -sS "${CURL_EXTRA[@]}" --max-time 15 "${BASE_URL}/api/v1/products?limit=100" \
+    | grep -o '"/images/[a-f0-9]\{40\}\.[a-z0-9]*"' | head -1 | tr -d '"')
+if [ -n "${img}" ]; then
+    curl_ok "${img}" "GET ${img}"
+    echo "ok   foto servida do MinIO (${img})"
+else
+    echo "FAIL nenhum produto com imagem própria (/images/...)" >&2
+    exit 1
+fi
+
 # API: cria um build (fluxo do montador)
 slug=$(curl -sS "${CURL_EXTRA[@]}" --max-time 15 -X POST -H 'Content-Type: application/json' \
     -d '{"name":"smoke-test"}' "${BASE_URL}/api/v1/builds" \

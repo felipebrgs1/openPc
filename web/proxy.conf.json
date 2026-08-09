@@ -3,5 +3,11 @@
     "target": "http://localhost:5080",
     "secure": false,
     "changeOrigin": true
+  },
+  "/images": {
+    "target": "http://localhost:9000",
+    "pathRewrite": { "^/images": "/openpc-images" },
+    "secure": false,
+    "changeOrigin": true
   }
 }

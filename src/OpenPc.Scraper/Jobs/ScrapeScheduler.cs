@@ -34,6 +34,17 @@ public sealed class ScrapeScheduler(
                 .Build(),
             ct);
 
+        // Sincroniza fotos dos CDNs → MinIO (após a coleta das 04:30).
+        await scheduler.ScheduleJob(
+            JobBuilder.Create<ImageSyncJob>()
+                .WithIdentity("image-sync")
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("image-sync-trigger")
+                .WithCronSchedule(ImageSyncJob.Cron)
+                .Build(),
+            ct);
+
         foreach (var job in jobs)
         {
             var key = new JobKey($"job-{job.Id:N}");

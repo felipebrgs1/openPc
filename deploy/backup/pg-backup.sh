@@ -30,4 +30,18 @@ else
     echo "[backup] RCLONE_REMOTE vazio — sem cópia off-site"
 fi
 
+# Fotos do catálogo (bucket MinIO) → mesmo destino off-site. rclone fala S3
+# com o MinIO; copy é idempotente (pula objetos idênticos) e não apaga nada.
+if [ -n "${RCLONE_REMOTE:-}" ] && [ -n "${MINIO_ACCESS_KEY:-}" ]; then
+    echo "[backup] espelhando bucket MinIO -> ${RCLONE_REMOTE}/openpc-images"
+    rclone copy "minio:openpc-images" "${RCLONE_REMOTE}/openpc-images" \
+        --s3-provider Minio \
+        --s3-access-key-id "${MINIO_ACCESS_KEY}" \
+        --s3-secret-access-key "${MINIO_SECRET_KEY}" \
+        --s3-endpoint "http://${MINIO_HOST:-minio}:9000" \
+        --s3-no-check-bucket
+else
+    echo "[backup] sem MinIO ou RCLONE_REMOTE — fotos não espelhadas"
+fi
+
 echo "[backup] ok: ${DUMP}"

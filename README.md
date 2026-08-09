@@ -24,6 +24,7 @@ Findings de scraping: [`docs/scraping-findings.md`](docs/scraping-findings.md)
 | `web` | Angular 22 (zoneless, signals, standalone) + Tailwind v4 |
 | `api` | ASP.NET Core 10, EF Core 10, Minimal APIs, rate limiting por IP |
 | `scraper` | .NET 10 Worker Service + Playwright (Chromium) |
+| `minio` | MinIO/S3 — fotos do catálogo (self-hosted, servidas em `/images/*` via Caddy) |
 | `db` | PostgreSQL 18 |
 | `redis` | Redis 8 (cache de listagens) |
 | `caddy` | Caddy 2 (imagem padrão — TLS, proxy) |

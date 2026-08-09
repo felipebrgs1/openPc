@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Minio;
 using OpenPc.Domain.Entities;
 using OpenPc.Infrastructure.Persistence;
 using OpenPc.Infrastructure.Persistence.Seed;
@@ -37,6 +38,32 @@ try
     builder.Services.AddHttpClient<KabumCollector>(c => c.DefaultRequestHeaders.UserAgent.ParseAdd(
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"));
     builder.Services.AddHttpClient<ScrapeAlertService>(c => c.Timeout = TimeSpan.FromSeconds(5));
+
+    // Download das fotos dos CDNs (sync-images): UA de browser + timeout.
+    builder.Services.AddHttpClient("images", c =>
+    {
+        c.DefaultRequestHeaders.UserAgent.ParseAdd(
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36");
+        c.Timeout = TimeSpan.FromSeconds(30);
+    });
+
+    // MinIO (bucket de fotos). Sem Minio:Endpoint o client fica null e o
+    // ImageSyncService vira no-op — o scraper funciona sem imagens próprias.
+    builder.Services.AddSingleton<IMinioClient>(_ =>
+    {
+        var endpoint = builder.Configuration["Minio:Endpoint"];
+        if (string.IsNullOrWhiteSpace(endpoint))
+            return null!;
+        var useSsl = bool.TryParse(builder.Configuration["Minio:UseSsl"], out var ssl) && ssl;
+        return new MinioClient()
+            .WithEndpoint(endpoint)
+            .WithCredentials(
+                builder.Configuration["Minio:AccessKey"] ?? "",
+                builder.Configuration["Minio:SecretKey"] ?? "")
+            .WithSSL(useSsl)
+            .Build();
+    });
+    builder.Services.AddSingleton<ImageSyncService>();
 
     builder.Services.AddSingleton<BrowserPool>();
     builder.Services.AddSingleton<IngestionService>();
@@ -137,6 +164,20 @@ try
 
         logger.LogInformation("cleanup-noise: {Count} produtos removidos ({Category})",
             toDelete.Count, category ?? "todas as categorias");
+        Log.CloseAndFlush();
+        return;
+    }
+
+    if (args.Length > 0 && args[0] == "sync-images")
+    {
+        // Baixa as fotos dos CDNs das lojas e sobe para o bucket MinIO,
+        // reescrevendo ImageUrl para /images/{key} (mesmo domínio, via Caddy).
+        // Idempotente: chave = hash da URL; re-rodar só completa falhas.
+        // Uso: sync-images
+        await using var scope = host.Services.CreateAsyncScope();
+        var sync = scope.ServiceProvider.GetRequiredService<ImageSyncService>();
+        var synced = await sync.SyncAsync(CancellationToken.None);
+        Log.Information("sync-images: {Count} fotos sincronizadas", synced);
         Log.CloseAndFlush();
         return;
     }
