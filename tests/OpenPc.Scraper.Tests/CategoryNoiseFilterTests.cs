@@ -51,6 +51,104 @@ public class CategoryNoiseFilterTests
     }
 
     [Theory]
+    [InlineData("psu", "Fonte 12 V 3a")]                              // fonte de bancada, sem potência
+    [InlineData("psu", "Fonte Para Tv Box")]                          // carregador, sem potência
+    [InlineData("psu", "Fonte Universal De 3v A 12v")]                // fonte universal, sem potência
+    [InlineData("psu", "Fonte De Alimentação Vxpro Vx230se")]         // potência só no modelo, sem 80 plus
+    [InlineData("psu", "Fonte De Alimentação Fortrek Pws-2003, ATX, 200W, 20+4P, Sem Cabo, 115/230V - Fk420p")]
+    [InlineData("psu", "Fonte C3tech Ps-200v4 200w Box S/cabo")]
+    [InlineData("psu", "Fonte K-Mex ATX, 200W Real - PX300DNG")]
+    [InlineData("psu", "Fonte Brazilpc ATX, 230W Real, Bpc-230v1.2, O&m C/cabo")] // "230v1.2" não é wattage
+    [InlineData("psu", "Fonte Knup ATX, 350W, Para PC - KP-526")]
+    [InlineData("psu", "Fonte VKOEM ATX, 200W")]
+    [InlineData("psu", "Fonte Evus ATX, 200W, 12V, Sem Cabo, 24P, 2SATA, Com Caixa - PS-200")]
+    [InlineData("psu", "Fonte Corsair VS450, 450W, 80 Plus White")]    // legítima, mas < 500W — política do catálogo
+    [InlineData("psu", "Fonte Cisco Nexus 7000 6000w Ac N7k-ac-6.0kw   Hot Swap")] // fonte de rack/switch
+    public void IsNoise_PsuAbaixoDe500wOuSemPotencia_True(string category, string title)
+    {
+        Assert.True(CategoryNoiseFilter.IsNoise(category, title));
+    }
+
+    [Theory]
+    [InlineData("psu", "Fonte Corsair CX650, 650W, 80 Plus Bronze")]
+    [InlineData("psu", "Fonte Corsair RM850x, 850W, 80 Plus Gold, Modular, 115-230V")] // tensão de entrada não vira wattage
+    [InlineData("psu", "Fonte EVGA 600 BR, 600W, 80 Plus Bronze")]
+    [InlineData("psu", "Fonte Mancer Thunder 500W, 80 Plus Bronze")]   // limite: 500W fica
+    [InlineData("psu", "Fonte Corsair CX650, 80 Plus Bronze, Semi-Modular")] // sem "W": 80 plus é o fallback (potência no modelo)
+    [InlineData("psu", "Fonte Gigabyte P750GM 750W 80 Plus Titanium")]
+    [InlineData("psu", "Fonte Cooler Master Elite Gold 1000 Fm A/wo Cord - Mpw-a001-afag-bwo")] // potência no modelo, selo "Gold"
+    [InlineData("psu", "Fonte Cooler Master Elite Gold 1200 Fm A/wo Cord - Mpw-c001-afag-bwo")]
+    [InlineData("psu", "Fonte Gamer Atx 850wk-mex Ez8898d")] // normalização cola marca no wattage
+    public void IsNoise_PsuDe500wOuMais_False(string category, string title)
+    {
+        Assert.False(CategoryNoiseFilter.IsNoise(category, title));
+    }
+
+    [Theory]
+    [InlineData("storage", "Cabo Sata 6 Gb/s Sata 3 - Uma Ponta 90 Graus - SSD Hd")]
+    [InlineData("storage", "Adaptador F3 Su-s01 Baia De 2.5 Polegadas 7mm E 9mm Para 3.5 Polegadas Para SSD E HD De Notebook")]
+    [InlineData("storage", "Kingston Adaptador de SSD 2,5, para Baia 3,5 - SNA-BR2/35")]
+    [InlineData("storage", "Adaptador Caddy Case SSD Hd 12.7mm Notebook Dell Hp Samsung")]
+    [InlineData("storage", "Adaptador Msata SSD Para Sata Hd SSD 2,5")]
+    [InlineData("storage", "Estojo Proteção Capa Para Case Hd SSD Neoprene Antichoque F3")]
+    [InlineData("storage", "Case Hd Externo Tipo C Exbom Cghd-40 Transparente USB 3.1 Case Gaveta HD/SSd 2.5 Ultra Rápido Slim")]
+    [InlineData("storage", "Case Gaveta Para SSD M.2 Nvme E Sata Usb 3.0 Usb C Type-c")]
+    [InlineData("storage", "Gaveta Mtek En-25k809ca Sata 2.5\" Para SSD Hdd Usb-c 3.1 Preto Alta Velocidade Portátil Externa")]
+    [InlineData("storage", "Dissipador SSD M.2 2280 Nvme/ngff 3mm Black + Thermal Pad")]
+    [InlineData("storage", "Dissipador Ctech Para SSD M2 NVME NGFF, 2280mm, 4mm, Alumínio, Thermalpad, PC, Notebook e PS5, Preto")]
+    [InlineData("storage", "Dissipador De Calor Coolmoon para SSD M2, Nvme, LED, ARGB, 5v, 3 Pinos, Alumínio")]
+    [InlineData("storage", "Base De Fixação Para SSD M.2 Nvme 2230 Com Dissipador Metálico Cobreado – Bracket De Fixação Notebook/mini PC")]
+    [InlineData("storage", "Caixa Externa Usb 3.1 Tipo C SSD Liga De Alumínio M.2 Disco De Estado Sólido Nvme/ngff")]
+    [InlineData("storage", "Dock Station Para SSD M.2 Nvme - Usb-c - Backup, Clone E Cópia - Cs-doc-NVME/ngff")]
+    [InlineData("storage", "Dock Station Usb-c Para M.2 Nvme Cs-doc-tyc-NVME - 1177")]
+    [InlineData("storage", "Sata Docking Station, Cópia Offline Hot Swap Double Slot 2x 18tb Hard Drive USB 3.0 Led RGB")]
+    [InlineData("storage", "Duplicador Clone De 4 Baias Ss Nvme M.2 Usb-c 4.0 40gbp")]
+    [InlineData("storage", "Estação Encaixe Wavlink Dual Slot P/disco Rígido Preto")]
+    [InlineData("storage", "Compartimento Case SSD Hdd Usb 3.0 Disco Rígido Kapbom")]
+    [InlineData("storage", "Hagibis SSD 2230 M2 Nvme SSD Com Ventilador Usb 32 Verde")]
+    [InlineData("storage", "Placa PCi-e Nvme Ad135 Knup")]
+    [InlineData("storage", "Placa Pci-e Para SSD M.2 Com Nvme - Pci-e X4 - Pm2-pcie")]
+    [InlineData("storage", "Placa Sata Para Ssd M.2 - Adaptador Sata 7+15 Pinos - Pm2-sata")]
+    [InlineData("storage", "placa adaptadora nvme m.2 pci-express ssd fenvi")]
+    [InlineData("storage", "Transforme Seu M.2 Nvme Em Case Externo Portátil Lexar Usb-c")]
+    [InlineData("storage", "PC GAMER CAPTAIN Intel i5 14400F / Intel Arc B580 / 16GB DDR4 (8GBx2) / SSD NVME 512GB")]
+    [InlineData("storage", "Cartucho 992x Pagewide Ciano M0j91al 193ml")]
+    [InlineData("storage", "Headset Gamer Corsair HS35 V2, 3.5mm, Drivers de 50mm, Carbono, CA-9011377-NA")]
+    [InlineData("storage", "Water Cooler Asus TUF Gaming LC III, 360mm, ARGB, Intel-AMD, Preto, 90RC0191-B0UAY0")]
+    [InlineData("storage", "PCi Riser Card 2 X PCi Flexivel 5cm R4r5r6r7")]
+    [InlineData("storage", "Monitor Gamer Duex, 27 Pol, Full HD, IPS, 240Hz")]
+    public void IsNoise_StorageSemUnidadeOuAcessorio_True(string category, string title)
+    {
+        Assert.True(CategoryNoiseFilter.IsNoise(category, title));
+    }
+
+    [Theory]
+    [InlineData("storage", "SSD Kingston NV3, 1 TB, M.2 2280, PCIe 4.0 x4, NVMe, Leitura: 6000 MB/s, Gravação: 4000 MB/s, Azul - SNV3S/1000G")]
+    [InlineData("storage", "HD SSD M.2 Kingston Fury Renegade, 2TB, Pci-e 4.0x4, Dissipador - Sfyrdk/2000g 5815")] // dissipador INCLUSO
+    [InlineData("storage", "SSD Kingston Fury Renegade, 1TB, M.2 2280, PCIe 4.0 x4, NVMe, Leitura: 7300 MB/s, Gravação: 6000MB/s, com Dissipador, Compatível com PS5 - SFYRSK/1000G")]
+    [InlineData("storage", "SSD Netac Nv3000 250gb M.2 Nvme Pcie Gen3x4, Leitura 3100mb/s, Com Dissipador")]
+    [InlineData("storage", "SSD Nvme Movespeed 4TB M.2 PCie 4.0 7450mb/s Dissipador Ps5 PC")]
+    [InlineData("storage", "SSD M.2 Corsair MP600 Pro LPX 1TB, PCIe 4.0, NVMe, Dissipador de Calor para PS5")]
+    [InlineData("storage", "Hd Externo Seagate 10tb Usb 3.0 Expansion Desktop Backup 3.5 - Preto")]
+    [InlineData("storage", "Hd 8tb Sata 3 512mb 7200rpm 3,5 S300 Pro Surveillance Md10ada800v Toshiba")]
+    [InlineData("storage", "Disco Solido Ediloca EN680E M2 256GB NVMe PCIe Gen 3x4")]
+    [InlineData("storage", "Disco Sólido Externo Samsung Portable SSD T7 Mu-pc1t0 1TB Azul")]
+    [InlineData("storage", "Nvme 1TB Corsair Mp700 Elite, M.2 2280, PCie Gen 5x4, Grav 10000mb/s, Leit 8400mb/s - Cssd-f1000gbmp700ehs")]
+    [InlineData("storage", "M.2 Kingston 4TB Kc3000 Pcie 4.0 Nvme Skc3000d/4096g")]
+    [InlineData("storage", "Unidade De Estado Sólido Interna PCie 3.0 M.2 De 512 Gb PCle 3.0 X 4 SSD Nvme M.2 2280 SSD Interno Kootion")]
+    [InlineData("storage", "SSD Externo Samsung T9 4TB, Usb 3.2 (usb-c), Leitura 2000 Mb/s, Escrita 1950 Mb/s - Preto Mu-pg4t0b/am")]
+    [InlineData("storage", "SSD. Externo 1TB Usb Tipo C 3.2 800mb/s Leit Preto E Laranja Sdssde30-1t00-g26 Sandisk")]
+    [InlineData("storage", "SSD Samsung 870 EVO, 2TB, SATA 2.5', Leitura 560MB/s - MZ-77E2T0B/AM.")]
+    [InlineData("storage", "Upgrade SSD 256gb Nvme PCie 3.0 Gen3x4 Ediloca Novo")]
+    [InlineData("storage", "Ssd Para Servidor Kingston 2.5\" Dc500r, 480GB, Leituras 555MB/s, Gravação 520MB/s, Sata III 6GB/s")]
+    [InlineData("storage", "HD SSD 1.92 Tb Sata Para Dell R240 R340 R440 R540 R640 R740")]
+    [InlineData("storage", "Drive SSD Sata3 2.5 Crucial, 240GB - CT240BX500SSD1")]
+    public void IsNoise_StorageUnidadesLegitimas_False(string category, string title)
+    {
+        Assert.False(CategoryNoiseFilter.IsNoise(category, title));
+    }
+
+    [Theory]
     [InlineData("cooler", "Pasta Térmica de Silicone Implastec Pote 500g")]
     public void IsNoise_CoolerComPastaTermica_True(string category, string title)
     {

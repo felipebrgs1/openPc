@@ -43,7 +43,8 @@ public class CardListingBuilderTests
 
         var listing = CardListingBuilder.Build(
             href, card, "cpu", PichauPrice, "de r$",
-            h => h.TrimEnd('/').Split('/').Last());
+            h => h.TrimEnd('/').Split('/').Last(),
+            "https://img.pichau.com.br/processador/7600x3d.jpg");
 
         Assert.NotNull(listing);
         Assert.Equal(1599.99m, listing!.PriceCash);
@@ -53,6 +54,7 @@ public class CardListingBuilderTests
         Assert.Equal("amd 7600x3d", listing.MatchKey);
         Assert.Equal("am5", listing.Specs["socket"]);
         Assert.Contains("7600X3D", listing.Title);
+        Assert.Equal("https://img.pichau.com.br/processador/7600x3d.jpg", listing.Thumbnail);
     }
 
     [Fact]

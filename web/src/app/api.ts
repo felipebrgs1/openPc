@@ -7,6 +7,15 @@ export interface Category {
   displayOrder: number;
 }
 
+/** Loja com a quantidade de itens com valor (preço em estoque) — banner da home. */
+export interface StoreStats {
+  id: string;
+  slug: string;
+  name: string;
+  baseUrl: string;
+  itemCount: number;
+}
+
 export interface BlockedBy {
   code: string;
   message: string;

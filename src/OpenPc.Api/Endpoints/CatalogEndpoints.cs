@@ -120,6 +120,10 @@ public static class CatalogEndpoints
         if (maxPrice is not null)
             projected = projected.Where(x => x.Price <= maxPrice);
 
+        // itens sem valor (nenhum listing em estoque com preço) não fazem parte
+        // do catálogo — mesma regra do contador por loja da home.
+        projected = projected.Where(x => x.Price != null);
+
         projected = sort switch
         {
             "price_desc" => projected.OrderByDescending(x => x.Price),

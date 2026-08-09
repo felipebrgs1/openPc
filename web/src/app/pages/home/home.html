@@ -34,6 +34,23 @@
   </div>
 </section>
 
+<section
+  class="card mt-6 grid divide-y divide-zinc-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0"
+>
+  @for (store of stores.value() ?? []; track store.id) {
+    <div class="flex items-center justify-between gap-3 px-6 py-4">
+      <span class="text-sm font-medium text-zinc-600">{{ store.name }}</span>
+      <span class="font-bold text-brand-700">
+        {{ formatNumber(store.itemCount) }}
+        <span class="text-xs font-normal text-zinc-400">peças</span>
+      </span>
+    </div>
+  }
+  @if (!stores.value()) {
+    <p class="px-6 py-4 text-sm text-zinc-400">Carregando itens por loja...</p>
+  }
+</section>
+
 <section id="categorias" class="mt-10 scroll-mt-20">
   <div class="flex items-baseline justify-between">
     <h2 class="text-lg font-semibold text-zinc-900">Explorar por categoria</h2>

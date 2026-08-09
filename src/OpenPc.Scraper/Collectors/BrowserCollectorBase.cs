@@ -106,7 +106,9 @@ public abstract partial class BrowserCollectorBase : IStoreCollector
             " const t = n.innerText || '';" +
             " if (t.includes('R$') && t.length > 80) break; }" +
             " const t = n.innerText || '';" +
-            " return { href: a.href, text: n.querySelectorAll('a[href]').length > 2 ? '' : t }; })";
+            " const img = n.querySelector('img');" +
+            " const src = img ? (img.currentSrc || img.src || img.dataset.src || img.dataset.original || '') : '';" +
+            " return { href: a.href, text: n.querySelectorAll('a[href]').length > 2 ? '' : t, img: src }; })";
         var cards = await page.EvaluateAsync<JsonElement>(js);
 
         var result = new List<RawListing>();
@@ -114,13 +116,14 @@ public abstract partial class BrowserCollectorBase : IStoreCollector
         {
             var href = el.GetProperty("href").GetString() ?? "";
             var text = el.GetProperty("text").GetString() ?? "";
-            var listing = BuildListing(href, text, categorySlug, marker);
+            var img = el.TryGetProperty("img", out var i) ? i.GetString() : null;
+            var listing = BuildListing(href, text, img, categorySlug, marker);
             if (listing is not null)
                 result.Add(listing);
         }
         return result;
     }
 
-    private RawListing? BuildListing(string href, string cardText, string categorySlug, string priceMarker)
-        => CardListingBuilder.Build(href, cardText, categorySlug, PriceRegex, priceMarker, ExtractStoreSku);
+    private RawListing? BuildListing(string href, string cardText, string? thumbnail, string categorySlug, string priceMarker)
+        => CardListingBuilder.Build(href, cardText, categorySlug, PriceRegex, priceMarker, ExtractStoreSku, thumbnail);
 }

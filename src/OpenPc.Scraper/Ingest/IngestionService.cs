@@ -40,15 +40,31 @@ public sealed class IngestionService(AppDbContext db, ILogger<IngestionService> 
             .ToDictionaryAsync(p => p.Model, ct);
 
         // atributos da categoria em memória — evita 1 query por item e
-        // duplicatas quando vários listings casam no mesmo produto novo
-        var attributesByProduct = await db.ProductAttributes
-            .Where(a => a.Product.CategoryId == category.Id)
+        // duplicatas quando vários listings casam no mesmo produto novo.
+        // Filtro por ids explícitos (não por navegação) para funcionar no
+        // provider InMemory dos testes.
+        var categoryProductIds = await db.Products
+            .Where(p => p.CategoryId == category.Id)
+            .Select(p => p.Id)
+            .ToListAsync(ct);
+        var attributesByProduct = (await db.ProductAttributes
+                .Where(a => categoryProductIds.Contains(a.ProductId))
+                .ToListAsync(ct))
             .GroupBy(a => a.ProductId)
-            .ToDictionaryAsync(g => g.Key, g => g.ToDictionary(a => a.Key), ct);
+            .ToDictionary(g => g.Key, g => g.ToDictionary(a => a.Key));
 
         var existingListings = await db.Listings
             .Where(l => l.StoreId == store.Id)
             .ToDictionaryAsync(l => l.StoreSku, ct);
+
+        // Dono do listing (loja+SKU) = identidade estável do produto entre
+        // scrapes. Categorias sem part number/match key estáveis (motherboard,
+        // memory, case, psu/storage de lojas browser) não têm outra âncora —
+        // sem isso, cada re-scrape cria produto novo e orfana o antigo.
+        var productsById = await db.Products
+            .Where(p => p.CategoryId == category.Id
+                        && existingListings.Values.Select(l => l.ProductId).Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, ct);
 
         var newProducts = 0;
         var newListings = 0;
@@ -71,7 +87,15 @@ public sealed class IngestionService(AppDbContext db, ILogger<IngestionService> 
         {
             ct.ThrowIfCancellationRequested();
 
-            var product = ResolveProduct(item, category.Id, byPartNumber, byMatchKey);
+            // 1ª âncora: o listing da loja (StoreSku único por loja) já existe
+            // → o produto dono dele é a identidade estável entre scrapes.
+            // Part number/match key continuam valendo para produtos sem listing
+            // (ex.: primeira coleta, ou achado por outra loja).
+            var listing = existingListings.GetValueOrDefault(item.StoreSku);
+            var product = listing is not null && productsById.TryGetValue(listing.ProductId, out var owner)
+                ? owner
+                : ResolveProduct(item, category.Id, byPartNumber, byMatchKey);
+
             if (product is null)
             {
                 product = new Product
@@ -89,6 +113,7 @@ public sealed class IngestionService(AppDbContext db, ILogger<IngestionService> 
                 if (product.PartNumber is not null)
                     byPartNumber[product.PartNumber] = product;
                 byMatchKey[product.Model] = product;
+                productsById[product.Id] = product; // duplicata do mesmo SKU no lote resolve pelo listing
                 newProducts++;
 
                 // sem âncora (part number E match key) em categoria que exige:
@@ -119,7 +144,6 @@ public sealed class IngestionService(AppDbContext db, ILogger<IngestionService> 
             // atributos (upsert via cache em memória)
             ApplyAttributes(product, item.Specs, attributesByProduct);
 
-            var listing = existingListings.GetValueOrDefault(item.StoreSku);
             if (listing is null)
             {
                 listing = new Listing

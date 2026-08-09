@@ -99,11 +99,23 @@ try
             .ToListAsync());
 
     app.MapGet("/api/v1/stores", async (AppDbContext db) =>
-        await db.Stores
+    {
+        // Itens com valor por loja (listing em estoque com preço) — alimenta o
+        // banner da home. Mesma noção de "item sem valor" do catálogo: o que
+        // não tem preço não conta.
+        var counts = await db.Listings
+            .Where(l => l.InStock && l.PriceCash != null)
+            .GroupBy(l => l.StoreId)
+            .Select(g => new { StoreId = g.Key, Count = g.Select(l => l.ProductId).Distinct().Count() })
+            .ToDictionaryAsync(x => x.StoreId, x => x.Count);
+
+        var stores = await db.Stores
             .Where(s => s.IsActive)
             .OrderBy(s => s.Name)
-            .Select(s => new StoreDto(s.Id, s.Slug, s.Name, s.BaseUrl))
-            .ToListAsync());
+            .ToListAsync();
+
+        return stores.Select(s => new StoreDto(s.Id, s.Slug, s.Name, s.BaseUrl, counts.GetValueOrDefault(s.Id)));
+    });
 
     await using (var scope = app.Services.CreateAsyncScope())
     {
@@ -155,4 +167,4 @@ static string ClientIp(HttpContext ctx)
 
 internal sealed record HealthResponse(string Status, string Database);
 internal sealed record CategoryDto(Guid Id, string Slug, string Name, int DisplayOrder);
-internal sealed record StoreDto(Guid Id, string Slug, string Name, string BaseUrl);
+internal sealed record StoreDto(Guid Id, string Slug, string Name, string BaseUrl, int ItemCount);

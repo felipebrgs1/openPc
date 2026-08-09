@@ -85,6 +85,9 @@ public static class CategoryNoiseFilter
             "bateria",
             "power bank",
             "adaptador de energia",
+            // Fonte de rack/switch (Cisco Nexus, servidores) — hot swap nunca
+            // aparece em fonte de desktop.
+            "hot swap",
         ]),
         ("memory",
         [
@@ -248,6 +251,49 @@ public static class CategoryNoiseFilter
         + @"|a320|b350|x370|b450|x470|b550|x570|a520|a620|b650|x670|b840|b850|x870)[a-z0-9]*\b",
         RegexOptions.Compiled);
 
+    /// <summary>Piso de potência das fontes do catálogo — abaixo disso não serve para montar.</summary>
+    private const int MinPsuWattage = 500;
+
+    /// <summary>
+    /// Potência explícita no título ("200W", "850w"). Exige a letra W depois do
+    /// número — "230v1.2" (tensão de entrada/part number) e "12v 3a" (fonte de
+    /// bancada) não casam. Sem borda após o W: a normalização cola marca no
+    /// wattage ("850wk-mex" → "850w k mex") e "800wats" é watt real. Texto já
+    /// normalizado (minúsculas).
+    /// </summary>
+    private static readonly Regex PsuWattage = new(@"\b(\d{3,4})\s*w", RegexOptions.Compiled);
+
+    /// <summary>
+    /// Fallback de PSU moderna sem "W" explícito: "80 plus" ou selo de
+    /// eficiência alto (a potência vive no modelo: CX650, RM750e, Elite Gold
+    /// 1000). Borda de palavra para não pegar "Goldentec"/"titanium" como
+    /// palavra solta de marca.
+    /// </summary>
+    private static readonly Regex PsuModern = new(
+        @"80\s*plus|(?<![a-z0-9])(gold|platinum|titanium)(?![a-z0-9])",
+        RegexOptions.Compiled);
+
+    /// <summary>
+    /// Marcadores de unidade de disco (SSD/HDD) no título. Necessário para o
+    /// produto pertencer a "storage"; "hd" com borda não pega "hdmi".
+    /// </summary>
+    private static readonly Regex StorageDrive = new(
+        @"(?<![a-z0-9])(ssd|nvme|hdd|hd)(?![a-z0-9])|disco rigido|disco solido|unidade de estado solido",
+        RegexOptions.Compiled);
+
+    /// <summary>
+    /// Acessórios de storage que derrubam o produto mesmo com marcador de
+    /// unidade no título ("Cabo Sata ... SSD Hd" é cabo, não disco).
+    /// "dissipador" e "base de" só no INÍCIO: no meio do título é dissipador
+    /// INCLUSO ("SSD Fury Renegade com Dissipador"), produto legítimo.
+    /// "pc gamer" no início = PC montado (cross-listing), não unidade.
+    /// </summary>
+    private static readonly Regex StorageAccessoryPrefix = new(@"^(dissipador|base de|pc gamer)", RegexOptions.Compiled);
+
+    private static readonly Regex StorageAccessory = new(
+        @"\b(adaptador|case|caddy|gaveta|baias?|capas?|caixa extern\w*|cabos?|placa|conversor|duplicador|clones?|encaixe|compartimento|cartucho|ventilador|enclosures?|dock\w*)\b",
+        RegexOptions.Compiled);
+
     /// <summary>true = produto não pertence à categoria (descartar/remover).</summary>
     public static bool IsNoise(string categorySlug, string? title)
     {
@@ -281,6 +327,31 @@ public static class CategoryNoiseFilter
         // Placas-mãe: whitelist de socket/chipset moderno (ver ModernMotherboard).
         if (categorySlug == "motherboard" && !ModernMotherboard.IsMatch(text))
             return true;
+
+        // Fontes: whitelist de potência — só ≥ MinPsuWattage serve para montar.
+        // Potência explícita no título decide sozinha ("230W 80 Plus" é descartada).
+        // Sem potência explícita, só fica com PsuModern (a potência está no modelo:
+        // CX650, RM750e, Elite Gold 1000). O resto é ruído: fonte 12V, carregador
+        // de TV box, universal 3-12V e ATX genérica de 200W/230W/350W (ver PsuWattage).
+        if (categorySlug == "psu")
+        {
+            var wattage = PsuWattage.Match(text);
+            if (wattage.Success)
+                return int.Parse(wattage.Groups[1].Value) < MinPsuWattage;
+            return !PsuModern.IsMatch(text);
+        }
+
+        // Armazenamento: só unidades de disco (SSD/HDD). Sem marcador de
+        // unidade (cabo, monitor, headset, water cooler, cartucho...) é ruído;
+        // com marcador, acessório (case, gaveta, adaptador, dock...) derruba.
+        if (categorySlug == "storage")
+        {
+            if (!StorageDrive.IsMatch(text))
+                return true;
+            if (StorageAccessoryPrefix.IsMatch(text))
+                return true;
+            return StorageAccessory.IsMatch(text);
+        }
 
         foreach (var (markerCategory, regex) in CompiledCrossMarkers)
         {

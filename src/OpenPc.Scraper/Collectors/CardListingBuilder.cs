@@ -11,7 +11,8 @@ public static class CardListingBuilder
 {
     public static RawListing? Build(
         string href, string cardText, string categorySlug,
-        Regex priceRegex, string priceMarker, Func<string, string> extractStoreSku)
+        Regex priceRegex, string priceMarker, Func<string, string> extractStoreSku,
+        string? thumbnail = null)
     {
         var m = priceRegex.Match(cardText);
         if (!m.Success)
@@ -47,7 +48,7 @@ public static class CardListingBuilder
             Installments: installment.Success ? int.Parse(installment.Groups[1].Value) : null,
             InstallmentText: installment.Success ? installment.Value.Trim() : null,
             InStock: !cardText.Contains("esgotado", StringComparison.OrdinalIgnoreCase),
-            Thumbnail: null,
+            Thumbnail: thumbnail,
             Manufacturer: null,
             PartNumber: PartNumber.Extract(name + " " + href),
             MatchKey: MatchKey.Build(name),
