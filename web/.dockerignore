@@ -1,0 +1,4 @@
+# Contexto de build do front (context = web/). node_modules/dist do host
+# não devem entrar no contexto (o npm ci da imagem é que instala).
+node_modules
+dist

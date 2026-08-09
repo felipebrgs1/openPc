@@ -1,9 +1,15 @@
+# Contexto de build do Docker (api/scraper usam o repo inteiro como contexto).
+# Excluir o que o build .NET não precisa: mudanças aqui NÃO invalidam o
+# layer COPY . . — sem isso, editar deploy/smoke-test.sh ou web/ recompila
+# restore+publish de todas as imagens (cache gha inútil).
+
 .git
-.gitignore
+.github
+deploy
+docs
+spikes
+tests
+web
+# artefatos de build do host — sobrescreveriam o obj/ do restore no container
 **/bin
 **/obj
-**/node_modules
-web/dist
-web/.angular
-pgdata
-.env*
