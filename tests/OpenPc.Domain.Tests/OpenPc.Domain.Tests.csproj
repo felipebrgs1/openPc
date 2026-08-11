@@ -30,6 +30,8 @@
   <ItemGroup>
     <Content Include="..\..\src\OpenPc.Infrastructure\Seeds\compatibility.json"
              Link="Seeds\compatibility.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\src\OpenPc.Infrastructure\Seeds\tdp.json"
+             Link="Seeds\tdp.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

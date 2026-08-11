@@ -13,7 +13,10 @@ internal static class TestBuilds
     public static PartSpec Part(PartCategory category, Guid id, params (string Key, object? Value)[] attrs) =>
         Part(category, id, "Modelo", attrs);
 
-    public static PartSpec Part(PartCategory category, Guid id, string model, params (string Key, object? Value)[] attrs)
+    public static PartSpec Part(PartCategory category, Guid id, string model, params (string Key, object? Value)[] attrs) =>
+        Part(category, id, model, "Peça de teste", attrs);
+
+    public static PartSpec Part(PartCategory category, Guid id, string model, string name, params (string Key, object? Value)[] attrs)
     {
         var dict = new Dictionary<string, AttrValue>(StringComparer.OrdinalIgnoreCase);
         foreach (var (key, value) in attrs)
@@ -37,7 +40,7 @@ internal static class TestBuilds
             Category = category,
             Brand = "Marca",
             Model = model,
-            Name = "Peça de teste",
+            Name = name,
             Attributes = dict,
         };
     }
@@ -45,6 +48,9 @@ internal static class TestBuilds
     /// <summary>CPU com modelo real (match key) — necessário para as regras de geração (BIOS/chipset).</summary>
     public static PartSpec Cpu(string model, params (string Key, object? Value)[] attrs) =>
         Part(PartCategory.Cpu, Guid.NewGuid(), model, attrs);
+
+    public static PartSpec Cpu(string model, string name, params (string Key, object? Value)[] attrs) =>
+        Part(PartCategory.Cpu, Guid.NewGuid(), model, name, attrs);
 
     public static PartSpec Cpu(params (string Key, object? Value)[] attrs) =>
         Part(PartCategory.Cpu, attrs);
@@ -54,6 +60,9 @@ internal static class TestBuilds
 
     public static PartSpec Gpu(params (string Key, object? Value)[] attrs) =>
         Part(PartCategory.Gpu, attrs);
+
+    public static PartSpec Gpu(string model, string name, params (string Key, object? Value)[] attrs) =>
+        Part(PartCategory.Gpu, Guid.NewGuid(), model, name, attrs);
 
     public static PartSpec Memory(params (string Key, object? Value)[] attrs) =>
         Part(PartCategory.Memory, attrs);

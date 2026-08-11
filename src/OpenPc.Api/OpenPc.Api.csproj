@@ -7,10 +7,11 @@
     <ProjectReference Include="..\OpenPc.Infrastructure\OpenPc.Infrastructure.csproj" />
   </ItemGroup>
 
-  <!-- Seed de compatibilidade (M3): Content não flui transitivamente por
-       ProjectReference — a API precisa copiar o arquivo para a saída. -->
+  <!-- Seeds curados (M3): Content não flui transitivamente por
+       ProjectReference — a API precisa copiar os arquivos para a saída. -->
   <ItemGroup>
     <Content Include="..\OpenPc.Infrastructure\Seeds\compatibility.json" Link="Seeds\compatibility.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\OpenPc.Infrastructure\Seeds\tdp.json" Link="Seeds\tdp.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

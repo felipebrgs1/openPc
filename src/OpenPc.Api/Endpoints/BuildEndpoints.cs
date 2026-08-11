@@ -41,17 +41,17 @@ public static class BuildEndpoints
     }
 
     private static async Task<IResult> GetBuildAsync(
-        string slug, AppDbContext db, CompatibilityEngine engine, CancellationToken ct)
+        string slug, AppDbContext db, CompatibilityEngine engine, TdpSeed tdpSeed, CancellationToken ct)
     {
         var build = await BuildSnapshotFactory.LoadBySlugAsync(db, slug, ct);
         if (build is null)
             return Results.NotFound();
 
-        return Results.Ok(await BuildResponseAsync(build, db, engine, ct));
+        return Results.Ok(await BuildResponseAsync(build, db, engine, tdpSeed, ct));
     }
 
     private static async Task<IResult> SetItemAsync(
-        string slug, string category, AppDbContext db, CompatibilityEngine engine,
+        string slug, string category, AppDbContext db, CompatibilityEngine engine, TdpSeed tdpSeed,
         [Microsoft.AspNetCore.Mvc.FromBody] SetItemRequest request, CancellationToken ct)
     {
         var build = await BuildSnapshotFactory.LoadBySlugAsync(db, slug, ct);
@@ -96,11 +96,11 @@ public static class BuildEndpoints
 
         // Recarrega para expor navegações (Product, Listing, Category) no response.
         build = await BuildSnapshotFactory.LoadBySlugAsync(db, slug, ct);
-        return Results.Ok(await BuildResponseAsync(build!, db, engine, ct));
+        return Results.Ok(await BuildResponseAsync(build!, db, engine, tdpSeed, ct));
     }
 
     private static async Task<IResult> RemoveItemAsync(
-        string slug, string category, AppDbContext db, CompatibilityEngine engine, CancellationToken ct)
+        string slug, string category, AppDbContext db, CompatibilityEngine engine, TdpSeed tdpSeed, CancellationToken ct)
     {
         var build = await BuildSnapshotFactory.LoadBySlugAsync(db, slug, ct);
         if (build is null)
@@ -116,11 +116,11 @@ public static class BuildEndpoints
         }
 
         build = await BuildSnapshotFactory.LoadBySlugAsync(db, slug, ct);
-        return Results.Ok(await BuildResponseAsync(build!, db, engine, ct));
+        return Results.Ok(await BuildResponseAsync(build!, db, engine, tdpSeed, ct));
     }
 
     private static async Task<IResult> GetCompatibilityAsync(
-        string slug, AppDbContext db, CompatibilityEngine engine, CancellationToken ct)
+        string slug, AppDbContext db, CompatibilityEngine engine, TdpSeed tdpSeed, CancellationToken ct)
     {
         var build = await BuildSnapshotFactory.LoadBySlugAsync(db, slug, ct);
         if (build is null)
@@ -128,14 +128,14 @@ public static class BuildEndpoints
 
         var snapshot = BuildSnapshotFactory.FromBuild(build);
         var evaluation = engine.Evaluate(snapshot);
-        var wattage = WattageEstimator.Estimate(snapshot);
+        var wattage = WattageEstimator.Estimate(snapshot, tdpSeed);
 
         return Results.Ok(new
         {
             slug = build.Slug,
             name = build.Name,
             filledSlots = build.Items.Count(i => i.ProductId is not null),
-            wattage = new WattageDto(wattage.BaseW, wattage.RecommendedW),
+            wattage = new WattageDto(wattage.BaseW, wattage.RecommendedW, wattage.Known),
             compatibility = ToDto(evaluation),
         });
     }
@@ -223,11 +223,11 @@ public static class BuildEndpoints
     }
 
     private static async Task<BuildResponseDto> BuildResponseAsync(
-        Build build, AppDbContext db, CompatibilityEngine engine, CancellationToken ct)
+        Build build, AppDbContext db, CompatibilityEngine engine, TdpSeed tdpSeed, CancellationToken ct)
     {
         var snapshot = BuildSnapshotFactory.FromBuild(build);
         var evaluation = engine.Evaluate(snapshot);
-        var wattage = WattageEstimator.Estimate(snapshot);
+        var wattage = WattageEstimator.Estimate(snapshot, tdpSeed);
 
         var productIds = build.Items
             .Where(i => i.ProductId is not null)
@@ -284,7 +284,7 @@ public static class BuildEndpoints
             build.UpdatedAt,
             items,
             total,
-            new WattageDto(wattage.BaseW, wattage.RecommendedW),
+            new WattageDto(wattage.BaseW, wattage.RecommendedW, wattage.Known),
             ToDto(evaluation));
     }
 
@@ -333,7 +333,7 @@ public static class BuildEndpoints
         IReadOnlyList<CompatibilityIssueDto> Warnings,
         IReadOnlyList<CompatibilityIssueDto> Infos);
     internal sealed record CompatibilityIssueDto(string Code, string Message, IReadOnlyList<Guid> Products);
-    internal sealed record WattageDto(decimal BaseW, decimal RecommendedW);
+    internal sealed record WattageDto(decimal BaseW, decimal RecommendedW, bool Known);
 }
 
 /// <summary>Slug curto de build compartilhável (sem caracteres ambíguos).</summary>

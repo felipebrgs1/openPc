@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <Content Include="Seeds\compatibility.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Seeds\tdp.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

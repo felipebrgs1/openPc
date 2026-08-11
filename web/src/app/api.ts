@@ -133,6 +133,7 @@ export interface CompatibilityDto {
 export interface WattageDto {
   baseW: number;
   recommendedW: number;
+  known: boolean;
 }
 
 export interface BuildDto {

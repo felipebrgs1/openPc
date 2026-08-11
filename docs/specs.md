@@ -262,6 +262,17 @@ CPU↔chipset↔BIOS por geração (ex: B650 + Ryzen 9000 = "BIOS ≥ AGESA 1.2.
 Scraper só preenche specs físicas/elétricas; a matriz de suporte é dado
 editorial versionado no repo.
 
+O mesmo vale para o **consumo** (`Infrastructure/Seeds/tdp.json`): TDP/TBP de
+referência por modelo, usados como fallback do `tdp_w` quando a ficha técnica
+não foi extraída (o job de enrichment de página de produto ainda não existe e
+títulos de listagem raramente citam TDP). Entradas casam contra o nome
+completo normalizado (`target: "name"`, distingue variantes "4070 super/ti",
+"9060 xt 16gb/8gb") ou contra o modelo do MatchKey (`target: "model"`,
+"amd 5700"). Primeiro match vence — variantes específicas antes da base.
+Com CPU/GPU sem TDP conhecido (nem scraping nem seed), a estimativa é
+marcada como desconhecida e o `PSU_WATTAGE_LOW` não avalia (evita falso
+alarme).
+
 ---
 
 ## 5. Scraping

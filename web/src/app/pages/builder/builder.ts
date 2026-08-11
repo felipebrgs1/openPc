@@ -56,7 +56,7 @@ export class Builder {
 
   protected readonly wattagePct = computed(() => {
     const w = this.build()?.wattage;
-    if (!w || w.recommendedW <= 0) return 0;
+    if (!w || !w.known || w.recommendedW <= 0) return 0;
     return Math.min(100, Math.round((w.baseW / w.recommendedW) * 100));
   });
 

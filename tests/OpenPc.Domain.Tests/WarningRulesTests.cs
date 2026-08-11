@@ -1,5 +1,6 @@
 using OpenPc.Domain.Compatibility;
 using OpenPc.Domain.Compatibility.Rules;
+using OpenPc.Infrastructure.Compatibility;
 
 namespace OpenPc.Domain.Tests;
 
@@ -53,6 +54,35 @@ public class WarningRulesTests
         var build = TestBuilds.Build(TestBuilds.Psu(("wattage", 300)));
 
         Assert.Null(new PsuWattageLowRule().Evaluate(build));
+    }
+
+    [Fact]
+    public void PsuWattageLow_ComSeedCurado_AlertaFonte500wNoBuildDoUsuario()
+    {
+        // Ryzen 7 5700 (65 W) + RX 9060 XT (250 W) via seed (tdp_w ausente):
+        // base = 415, recomendado = 581 → fonte 500 W é insuficiente.
+        var build = TestBuilds.Build(
+            TestBuilds.Cpu("amd 5700"),
+            TestBuilds.Gpu("amd 9060xt", "Asus AMD Radeon RX 9060 XT TUF Gaming OC, 16GB"),
+            TestBuilds.Psu(("wattage", 500)));
+
+        var result = new PsuWattageLowRule(TdpSeedLoader.Load()).Evaluate(build);
+
+        Assert.NotNull(result);
+        Assert.Equal("PSU_WATTAGE_LOW", result!.Code);
+        Assert.Contains("581", result.MessagePtBr);
+    }
+
+    [Fact]
+    public void PsuWattageLow_TdpDesconhecido_NaoAvalia()
+    {
+        // GPU sem tdp_w e sem match no seed — julgar a fonte seria falso alarme.
+        var build = TestBuilds.Build(
+            TestBuilds.Cpu("amd 5700"),
+            TestBuilds.Gpu("amd 9999", "GPU Desconhecida Modelo Futuro"),
+            TestBuilds.Psu(("wattage", 300)));
+
+        Assert.Null(new PsuWattageLowRule(TdpSeedLoader.Load()).Evaluate(build));
     }
 
     // ---------- NO_GPU_NO_IGPU ----------
