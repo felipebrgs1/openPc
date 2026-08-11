@@ -34,7 +34,7 @@ public abstract partial class BrowserCollectorBase : IStoreCollector
     protected abstract string ExtractStoreSku(string href);
 
     private readonly BrowserPool _pool;
-    private readonly ILogger _logger;
+    protected readonly ILogger _logger;
 
     public string StoreSlug => StoreSlugValue;
 

@@ -52,6 +52,18 @@ public static partial class SpecExtractor
     }
 
     /// <summary>
+    /// Specs essenciais de fonte a partir do título: `wattage` (alimenta a
+    /// regra PSU_WATTAGE_LOW). Títulos de fonte quase sempre citam a potência
+    /// ("Fonte 500W") — diferente de CPU/GPU, onde o TDP só sai da ficha.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> ExtractPsu(string title)
+    {
+        var specs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        Set(specs, "wattage", FirstMatch(title, PsuWattage()));
+        return specs;
+    }
+
+    /// <summary>
     /// Specs essenciais de placa-mãe a partir do título (as 3 lojas embutem
     /// socket, chipset, formato e DDR no nome). Chaves do contrato §3.2 que
     /// alimentam a engine M3.
@@ -133,6 +145,9 @@ public static partial class SpecExtractor
 
     [GeneratedRegex(@"\b(DDR[45])\b", RegexOptions.IgnoreCase)]
     private static partial Regex MemoryType();
+
+    [GeneratedRegex(@"\b(\d{3,4})\s*[Ww](?:atts?)?\b", RegexOptions.IgnoreCase)]
+    private static partial Regex PsuWattage();
 
     [GeneratedRegex(@"(?<![A-Za-z0-9])(?:AMD|Intel\s+)?([ABXHZ]\d{3})", RegexOptions.IgnoreCase)]
     private static partial Regex Chipset();

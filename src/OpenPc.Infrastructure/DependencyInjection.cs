@@ -24,6 +24,7 @@ public static class DependencyInjection
 
         // Engine de compatibilidade (M3): seed curado + regras + executor.
         services.AddSingleton(CompatibilitySeedLoader.Load());
+        services.AddSingleton(TdpSeedLoader.Load()); // fallback de consumo (tdp.json)
         services.AddSingleton<CompatibilityEngine>();
         foreach (var type in typeof(ICompatibilityRule).Assembly.GetTypes()
             .Where(t => t is { IsAbstract: false, IsInterface: false }

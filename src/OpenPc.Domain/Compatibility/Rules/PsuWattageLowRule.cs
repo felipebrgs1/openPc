@@ -1,7 +1,7 @@
 namespace OpenPc.Domain.Compatibility.Rules;
 
 /// <summary>Warning §4.3: psu.wattage &lt; recomendado (estimativa ×1.4 ou gpu.recommended_psu_w).</summary>
-public sealed class PsuWattageLowRule : ICompatibilityRule
+public sealed class PsuWattageLowRule(TdpSeed? seed = null) : ICompatibilityRule
 {
     public string Code => "PSU_WATTAGE_LOW";
 
@@ -17,7 +17,9 @@ public sealed class PsuWattageLowRule : ICompatibilityRule
         if (wattage is null)
             return null;
 
-        var estimate = WattageEstimator.Estimate(build);
+        var estimate = WattageEstimator.Estimate(build, seed);
+        if (!estimate.Known)
+            return null; // TDP desconhecido — não dá para julgar a fonte sem falso alarme
         var gpuRecommended = gpu?.Num("recommended_psu_w");
         var required = gpuRecommended is not null
             ? Math.Max(estimate.RecommendedW, gpuRecommended.Value)
