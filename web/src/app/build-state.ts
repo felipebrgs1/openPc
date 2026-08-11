@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import type { BuildDto, PriceComparison } from './api';
+import { isMultiSlot } from './api';
 
 const LS_KEY = 'openpc.build.slug';
 
@@ -65,10 +66,31 @@ export class BuildState {
     await this.refresh();
   }
 
+  /** Adiciona MAIS uma peça ao slot (memory/storage). */
+  async addItem(category: string, productId: string): Promise<void> {
+    const slug = await this.ensure();
+    await firstValueFrom(this.http.post(`/api/v1/builds/${slug}/items/${category}`, { productId }));
+    await this.refresh();
+  }
+
+  /** Escolhe a peça do slot: adiciona em slots multi, substitui nos demais. */
+  async chooseItem(category: string, productId: string): Promise<void> {
+    if (isMultiSlot(category)) await this.addItem(category, productId);
+    else await this.setItem(category, productId);
+  }
+
   async removeItem(category: string): Promise<void> {
     const slug = this.slug();
     if (!slug) return;
     await firstValueFrom(this.http.delete(`/api/v1/builds/${slug}/items/${category}`));
+    await this.refresh();
+  }
+
+  /** Remove uma peça específica do slot multi (ex: só o 2º pente). */
+  async removeItemById(itemId: string): Promise<void> {
+    const slug = this.slug();
+    if (!slug) return;
+    await firstValueFrom(this.http.delete(`/api/v1/builds/${slug}/items/${itemId}`));
     await this.refresh();
   }
 
@@ -81,9 +103,15 @@ export class BuildState {
 
     for (const item of source.items) {
       if (!item.productId) continue;
-      await firstValueFrom(
-        this.http.put(`/api/v1/builds/${created.slug}/items/${item.category}`, { productId: item.productId }),
-      );
+      if (isMultiSlot(item.category)) {
+        await firstValueFrom(
+          this.http.post(`/api/v1/builds/${created.slug}/items/${item.category}`, { productId: item.productId }),
+        );
+      } else {
+        await firstValueFrom(
+          this.http.put(`/api/v1/builds/${created.slug}/items/${item.category}`, { productId: item.productId }),
+        );
+      }
     }
 
     this.slug.set(created.slug);

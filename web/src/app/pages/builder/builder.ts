@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import type { BuildItemDto, Category, IssueDto, ProductListItem, ProductsResponse } from '../../api';
-import { categoryLabel } from '../../api';
+import { categoryLabel, isMultiSlot } from '../../api';
 import { formatBRL } from '../../format';
 import { Seo } from '../../seo';
 import { BuildState } from '../../build-state';
@@ -49,8 +49,12 @@ export class Builder {
   });
 
   protected readonly itemsByCategory = computed(() => {
-    const map = new Map<string, BuildItemDto>();
-    for (const item of this.build()?.items ?? []) map.set(item.category, item);
+    const map = new Map<string, BuildItemDto[]>();
+    for (const item of this.build()?.items ?? []) {
+      const list = map.get(item.category) ?? [];
+      list.push(item);
+      map.set(item.category, list);
+    }
     return map;
   });
 
@@ -64,6 +68,7 @@ export class Builder {
   protected readonly origin = location.origin;
   protected readonly formatBRL = formatBRL;
   protected readonly categoryLabel = categoryLabel;
+  protected readonly isMultiSlot = isMultiSlot;
 
   constructor() {
     this.seo.set(
@@ -99,7 +104,7 @@ export class Builder {
   protected async select(cat: Category, product: ProductListItem): Promise<void> {
     this.error.set(null);
     try {
-      await this.buildState.setItem(cat.slug, product.id);
+      await this.buildState.chooseItem(cat.slug, product.id);
       this.picker.set(null);
     } catch {
       this.error.set('Falha ao adicionar a peça ao build.');
@@ -115,6 +120,15 @@ export class Builder {
     }
   }
 
+  protected async removeOne(item: BuildItemDto): Promise<void> {
+    this.error.set(null);
+    try {
+      await this.buildState.removeItemById(item.id);
+    } catch {
+      this.error.set('Falha ao remover a peça.');
+    }
+  }
+
   protected issueProductNames(issue: IssueDto): string[] {
     const items = this.build()?.items ?? [];
     return issue.products
@@ -125,12 +139,39 @@ export class Builder {
   protected async copyLink(): Promise<void> {
     const slug = this.buildState.slug();
     if (!slug) return;
+    const url = `${location.origin}/build/${slug}`;
+    const ok = await copyText(url);
+    if (!ok) return; // clipboard indisponível — sem ação
+    this.copied.set(true);
+    setTimeout(() => this.copied.set(false), 1500);
+  }
+}
+
+/**
+ * Copia texto para a área de transferência com fallback para navegadores
+ * sem Clipboard API (http fora de localhost, iframes sem permissão).
+ */
+async function copyText(text: string): Promise<boolean> {
+  if (navigator.clipboard?.writeText) {
     try {
-      await navigator.clipboard.writeText(`${location.origin}/build/${slug}`);
-      this.copied.set(true);
-      setTimeout(() => this.copied.set(false), 1500);
+      await navigator.clipboard.writeText(text);
+      return true;
     } catch {
-      /* clipboard indisponível — sem ação */
+      /* cai no fallback */
     }
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch {
+    return false;
   }
 }

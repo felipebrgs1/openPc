@@ -108,6 +108,7 @@ export interface AlertResponse {
 }
 
 export interface BuildItemDto {
+  id: string;
   category: string;
   productId: string | null;
   name: string | null;
@@ -175,5 +176,10 @@ export const CATEGORY_LABELS: Record<string, string> = {
   case: 'Gabinete',
   cooler: 'Cooler',
 };
+
+/** Slots que aceitam mais de uma peça (memória e armazenamento). */
+export const MULTI_SLOT_CATEGORIES = new Set(['memory', 'storage']);
+
+export const isMultiSlot = (slug: string): boolean => MULTI_SLOT_CATEGORIES.has(slug);
 
 export const categoryLabel = (slug: string): string => CATEGORY_LABELS[slug] ?? slug;

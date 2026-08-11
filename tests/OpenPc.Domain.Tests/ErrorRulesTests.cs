@@ -123,6 +123,21 @@ public class ErrorRulesTests
         Assert.Null(new RamTypeMismatchRule().Evaluate(build));
     }
 
+    [Fact]
+    public void RamTypeMismatch_UmPenteDdr5OutroDdr4_Erro()
+    {
+        var build = TestBuilds.Build(
+            TestBuilds.Memory(("type", "ddr5")),
+            TestBuilds.Memory(("type", "ddr4")),
+            TestBuilds.Mobo(("memory_type", "ddr5")));
+
+        var result = new RamTypeMismatchRule().Evaluate(build);
+
+        Assert.NotNull(result);
+        Assert.Equal("RAM_TYPE_MISMATCH", result!.Code);
+        Assert.Equal(2, result.InvolvedProductIds.Count);
+    }
+
     // ---------- RAM_CAPACITY_EXCEEDED ----------
 
     [Fact]
@@ -146,6 +161,29 @@ public class ErrorRulesTests
             TestBuilds.Mobo(("max_memory_gb", 128)));
 
         Assert.Null(new RamCapacityExceededRule().Evaluate(build));
+    }
+
+    [Fact]
+    public void RamCapacityExceeded_DoisPentesSomamCapacidade_Erro()
+    {
+        var build = TestBuilds.Build(
+            TestBuilds.Memory(("capacity_gb", 64)),
+            TestBuilds.Memory(("capacity_gb", 64)),
+            TestBuilds.Mobo(("max_memory_gb", 128)));
+
+        Assert.Null(new RamCapacityExceededRule().Evaluate(build));
+
+        var over = TestBuilds.Build(
+            TestBuilds.Memory(("capacity_gb", 64)),
+            TestBuilds.Memory(("capacity_gb", 64)),
+            TestBuilds.Memory(("capacity_gb", 32)),
+            TestBuilds.Mobo(("max_memory_gb", 128)));
+
+        var result = new RamCapacityExceededRule().Evaluate(over);
+
+        Assert.NotNull(result);
+        Assert.Equal("RAM_CAPACITY_EXCEEDED", result!.Code);
+        Assert.Equal(4, result.InvolvedProductIds.Count);
     }
 
     // ---------- RAM_SLOT_OVERFLOW ----------

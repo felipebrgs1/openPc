@@ -40,4 +40,7 @@ public static class PartCategorySlugs
         "cooler" => PartCategory.Cooler,
         _ => null,
     };
+
+    /// <summary>Slots que aceitam mais de uma peça (ex: 2 pentes de RAM, 2 SSDs).</summary>
+    public static bool IsMultiSlot(string? slug) => slug?.ToLowerInvariant() is "memory" or "storage";
 }

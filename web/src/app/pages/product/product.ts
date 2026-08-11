@@ -52,7 +52,8 @@ export class Product {
   async addToBuild(): Promise<void> {
     this.adding.set(true);
     try {
-      await this.buildState.setItem(this.category(), this.id());
+      // memory/storage: adiciona mais uma peça; demais: substitui o slot
+      await this.buildState.chooseItem(this.category(), this.id());
       this.added.set(true);
     } finally {
       this.adding.set(false);

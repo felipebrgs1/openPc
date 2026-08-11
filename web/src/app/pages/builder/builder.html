@@ -56,57 +56,116 @@
     </div>
 
     @for (cat of slots(); track cat.id) {
-      @let item = itemsByCategory().get(cat.slug);
-      <div
-        role="button"
-        tabindex="0"
-        (click)="openPicker(cat)"
-        (keydown.enter)="openPicker(cat)"
-        class="group grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b border-zinc-100 px-4 py-3 transition hover:bg-brand-50/60 sm:grid-cols-[150px_minmax(0,1fr)_110px_80px]"
-      >
-        <span class="col-span-2 flex items-center gap-2 text-sm font-semibold text-zinc-600 sm:col-span-1">
-          <span class="text-brand-500">
-            <app-category-icon [slug]="cat.slug" [size]="18" />
-          </span>
-          {{ categoryLabel(cat.slug) }}
-        </span>
-
-        @if (item) {
-          <span class="flex min-w-0 items-center gap-3">
-            @if (item.imageUrl) {
-              <img
-                [src]="item.imageUrl"
-                [alt]="item.name"
-                class="h-10 w-10 shrink-0 object-contain"
-              />
-            }
-            <span class="min-w-0">
-              <span class="block truncate text-sm text-zinc-800">{{ item.name }}</span>
-              @if (item.storeSlug) {
-                <span class="badge mt-0.5">{{ item.storeSlug }}</span>
-              }
+      @let catItems = itemsByCategory().get(cat.slug) ?? [];
+      @if (isMultiSlot(cat.slug) && catItems.length > 0) {
+        @for (item of catItems; track item.id; let i = $index) {
+          <div
+            role="button"
+            tabindex="0"
+            (click)="openPicker(cat)"
+            (keydown.enter)="openPicker(cat)"
+            class="group grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b border-zinc-100 px-4 py-3 transition hover:bg-brand-50/60 sm:grid-cols-[150px_minmax(0,1fr)_110px_80px]"
+          >
+            <span class="col-span-2 flex items-center gap-2 text-sm font-semibold text-zinc-600 sm:col-span-1">
+              <span class="text-brand-500">
+                <app-category-icon [slug]="cat.slug" [size]="18" />
+              </span>
+              {{ categoryLabel(cat.slug) }} {{ i + 1 }}
             </span>
-          </span>
-          <span class="text-right text-sm font-bold text-zinc-900">
-            {{ formatBRL(item.price) }}
-          </span>
-          <span class="col-span-2 flex justify-end sm:col-span-1 sm:justify-end">
-            <button
-              type="button"
-              (click)="remove(cat); $event.stopPropagation()"
-              class="rounded-lg px-2 py-1 text-xs font-medium text-zinc-400 transition hover:bg-red-50 hover:text-red-600"
-            >
-              Remover
-            </button>
-          </span>
-        } @else {
-          <span class="col-span-2 text-sm text-zinc-400 transition group-hover:text-brand-600 sm:col-span-1 sm:col-start-2">
-            + Escolher {{ categoryLabel(cat.slug).toLowerCase() }}
-          </span>
-          <span class="hidden sm:block"></span>
-          <span class="hidden sm:block"></span>
+
+            <span class="flex min-w-0 items-center gap-3">
+              @if (item.imageUrl) {
+                <img
+                  [src]="item.imageUrl"
+                  [alt]="item.name"
+                  class="h-10 w-10 shrink-0 object-contain"
+                />
+              }
+              <span class="min-w-0">
+                <span class="block truncate text-sm text-zinc-800">{{ item.name }}</span>
+                @if (item.storeSlug) {
+                  <span class="badge mt-0.5">{{ item.storeSlug }}</span>
+                }
+              </span>
+            </span>
+            <span class="text-right text-sm font-bold text-zinc-900">
+              {{ formatBRL(item.price) }}
+            </span>
+            <span class="col-span-2 flex justify-end sm:col-span-1 sm:justify-end">
+              <button
+                type="button"
+                (click)="removeOne(item); $event.stopPropagation()"
+                class="rounded-lg px-2 py-1 text-xs font-medium text-zinc-400 transition hover:bg-red-50 hover:text-red-600"
+              >
+                Remover
+              </button>
+            </span>
+          </div>
         }
-      </div>
+        <div
+          role="button"
+          tabindex="0"
+          (click)="openPicker(cat)"
+          (keydown.enter)="openPicker(cat)"
+          class="group grid cursor-pointer items-center border-b border-zinc-100 px-4 py-2.5 transition hover:bg-brand-50/60"
+        >
+          <span class="flex items-center gap-2 text-sm font-medium text-brand-600">
+            + Adicionar {{ categoryLabel(cat.slug).toLowerCase() }}
+          </span>
+        </div>
+      } @else {
+        @let item = catItems[0];
+        <div
+          role="button"
+          tabindex="0"
+          (click)="openPicker(cat)"
+          (keydown.enter)="openPicker(cat)"
+          class="group grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b border-zinc-100 px-4 py-3 transition hover:bg-brand-50/60 sm:grid-cols-[150px_minmax(0,1fr)_110px_80px]"
+        >
+          <span class="col-span-2 flex items-center gap-2 text-sm font-semibold text-zinc-600 sm:col-span-1">
+            <span class="text-brand-500">
+              <app-category-icon [slug]="cat.slug" [size]="18" />
+            </span>
+            {{ categoryLabel(cat.slug) }}
+          </span>
+
+          @if (item) {
+            <span class="flex min-w-0 items-center gap-3">
+              @if (item.imageUrl) {
+                <img
+                  [src]="item.imageUrl"
+                  [alt]="item.name"
+                  class="h-10 w-10 shrink-0 object-contain"
+                />
+              }
+              <span class="min-w-0">
+                <span class="block truncate text-sm text-zinc-800">{{ item.name }}</span>
+                @if (item.storeSlug) {
+                  <span class="badge mt-0.5">{{ item.storeSlug }}</span>
+                }
+              </span>
+            </span>
+            <span class="text-right text-sm font-bold text-zinc-900">
+              {{ formatBRL(item.price) }}
+            </span>
+            <span class="col-span-2 flex justify-end sm:col-span-1 sm:justify-end">
+              <button
+                type="button"
+                (click)="remove(cat); $event.stopPropagation()"
+                class="rounded-lg px-2 py-1 text-xs font-medium text-zinc-400 transition hover:bg-red-50 hover:text-red-600"
+              >
+                Remover
+              </button>
+            </span>
+          } @else {
+            <span class="col-span-2 text-sm text-zinc-400 transition group-hover:text-brand-600 sm:col-span-1 sm:col-start-2">
+              + Escolher {{ categoryLabel(cat.slug).toLowerCase() }}
+            </span>
+            <span class="hidden sm:block"></span>
+            <span class="hidden sm:block"></span>
+          }
+        </div>
+      }
     }
   </section>
 

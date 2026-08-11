@@ -25,8 +25,9 @@ public sealed class BuildItemConfiguration : IEntityTypeConfiguration<BuildItem>
     public void Configure(EntityTypeBuilder<BuildItem> builder)
     {
         builder.ToTable("build_items");
-        // Um slot por categoria: PUT /items/{category} substitui a peça.
-        builder.HasIndex(i => new { i.BuildId, i.CategoryId }).IsUnique();
+        // Sem unique em (BuildId, CategoryId): memory/storage aceitam várias peças
+        // (POST /items/{category} adiciona; PUT substitui todas da categoria).
+        builder.HasIndex(i => new { i.BuildId, i.CategoryId });
 
         builder.HasOne(i => i.Category)
             .WithMany()
