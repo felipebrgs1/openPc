@@ -365,8 +365,10 @@ Paginação por cursor (`?cursor=&limit=`) nas listagens grandes.
 | `DELETE /alerts/{id}?token=` | Cancela alerta (token obrigatório) |
 | `POST /builds` | Cria build (retorna `slug`) |
 | `GET /builds/{slug}` | Build completo + preço total + resultado da engine |
-| `PUT /builds/{slug}/items/{category}` | Define/troca peça do slot (re-roda engine) |
-| `DELETE /builds/{slug}/items/{category}` | Limpa slot |
+| `PUT /builds/{slug}/items/{category}` | Define/troca peça do slot; em slots multi (memory/storage) substitui todas as peças da categoria (re-roda engine) |
+| `POST /builds/{slug}/items/{category}` | Adiciona mais uma peça à categoria (apenas memory/storage; 400 nas demais) |
+| `DELETE /builds/{slug}/items/{category}` | Limpa o slot (slots multi: remove todas as peças da categoria) |
+| `DELETE /builds/{slug}/items/{itemId}` | Remove uma peça específica (ex: só o 2º pente) |
 | `GET /builds/{slug}/compatibility` | Avaliação completa (errors/warnings) |
 | `GET /builds/{slug}/price-comparison` | Otimização: menor total por combinação de lojas vs menor preço individual |
 | `GET /stores` | Lojas ativas |
@@ -399,7 +401,8 @@ gestão de seeds de compatibilidade.
    badge de menor preço histórico, sparkline de 30 dias.
 3. **`/pecas/:category/:id`** — detalhe: specs, tabela de ofertas por loja,
    gráfico de histórico (90 dias), botão "adicionar ao build".
-4. **`/montar`** — o core: 8 slots (CPU → cooler). Cada slot abre seletor
+4. **`/montar`** — o core: 8 slots (CPU → cooler), sendo memory e storage
+   multi-peça (2+ pentes de RAM, 2+ SSDs). Cada slot abre seletor
    **já filtrado por compatibilidade** com o build atual. Painel lateral:
    preço total (menor preço vs por loja), wattage estimado com barra de
    margem, lista de warnings/errors com link para a peça conflitante.

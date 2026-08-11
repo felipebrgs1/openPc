@@ -17,7 +17,9 @@ public static class BuildEndpoints
         builds.MapPost("", CreateBuildAsync);
         builds.MapGet("/{slug}", GetBuildAsync);
         builds.MapPut("/{slug}/items/{category}", SetItemAsync);
+        builds.MapPost("/{slug}/items/{category}", AddItemAsync);
         builds.MapDelete("/{slug}/items/{category}", RemoveItemAsync);
+        builds.MapDelete("/{slug}/items/{itemId:guid}", RemoveItemByIdAsync);
         builds.MapGet("/{slug}/compatibility", GetCompatibilityAsync);
         builds.MapGet("/{slug}/price-comparison", GetPriceComparisonAsync);
     }
@@ -50,6 +52,10 @@ public static class BuildEndpoints
         return Results.Ok(await BuildResponseAsync(build, db, engine, tdpSeed, ct));
     }
 
+    /// <summary>
+    /// Define/troca a peça da categoria. Em slots multi (memory/storage) substitui
+    /// TODAS as peças da categoria pela informada (semântica de "setar").
+    /// </summary>
     private static async Task<IResult> SetItemAsync(
         string slug, string category, AppDbContext db, CompatibilityEngine engine, TdpSeed tdpSeed,
         [Microsoft.AspNetCore.Mvc.FromBody] SetItemRequest request, CancellationToken ct)
@@ -78,23 +84,73 @@ public static class BuildEndpoints
                 return Results.BadRequest("Listing não pertence ao produto informado.");
         }
 
-        // build vem de AsNoTracking (snapshot) — o item precisa ser tracked
+        // build vem de AsNoTracking (snapshot) — os itens precisam ser tracked
         // para a mutação persistir (bug: item existente era detached e o
         // SaveChanges silenciosamente não gravava a troca).
-        var item = await db.BuildItems.FirstOrDefaultAsync(
-            i => i.BuildId == build.Id && i.CategoryId == categoryEntity.Id, ct);
-        if (item is null)
-        {
-            item = new BuildItem { Id = Guid.NewGuid(), BuildId = build.Id, CategoryId = categoryEntity.Id };
-            db.BuildItems.Add(item);
-        }
+        var existing = await db.BuildItems
+            .Where(i => i.BuildId == build.Id && i.CategoryId == categoryEntity.Id)
+            .ToListAsync(ct);
+        db.BuildItems.RemoveRange(existing);
 
-        item.ProductId = product.Id;
-        item.ListingId = listing?.Id;
+        db.BuildItems.Add(new BuildItem
+        {
+            Id = Guid.NewGuid(),
+            BuildId = build.Id,
+            CategoryId = categoryEntity.Id,
+            ProductId = product.Id,
+            ListingId = listing?.Id,
+        });
         build.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
 
         // Recarrega para expor navegações (Product, Listing, Category) no response.
+        build = await BuildSnapshotFactory.LoadBySlugAsync(db, slug, ct);
+        return Results.Ok(await BuildResponseAsync(build!, db, engine, tdpSeed, ct));
+    }
+
+    /// <summary>Adiciona MAIS uma peça à categoria (apenas slots multi: memory/storage).</summary>
+    private static async Task<IResult> AddItemAsync(
+        string slug, string category, AppDbContext db, CompatibilityEngine engine, TdpSeed tdpSeed,
+        [Microsoft.AspNetCore.Mvc.FromBody] SetItemRequest request, CancellationToken ct)
+    {
+        if (!PartCategorySlugs.IsMultiSlot(category))
+            return Results.BadRequest($"Categoria '{category}' aceita apenas uma peça.");
+
+        var build = await BuildSnapshotFactory.LoadBySlugAsync(db, slug, ct);
+        if (build is null)
+            return Results.NotFound();
+
+        var categoryEntity = await db.Categories.FirstOrDefaultAsync(c => c.Slug == category, ct);
+        if (categoryEntity is null)
+            return Results.BadRequest($"Categoria '{category}' desconhecida.");
+
+        var product = await db.Products
+            .FirstOrDefaultAsync(p => p.Id == request.ProductId, ct);
+        if (product is null)
+            return Results.NotFound("Produto não encontrado.");
+        if (product.CategoryId != categoryEntity.Id)
+            return Results.BadRequest($"Produto não pertence à categoria '{category}'.");
+
+        Listing? listing = null;
+        if (request.ListingId is not null)
+        {
+            listing = await db.Listings.FirstOrDefaultAsync(
+                l => l.Id == request.ListingId && l.ProductId == product.Id, ct);
+            if (listing is null)
+                return Results.BadRequest("Listing não pertence ao produto informado.");
+        }
+
+        db.BuildItems.Add(new BuildItem
+        {
+            Id = Guid.NewGuid(),
+            BuildId = build.Id,
+            CategoryId = categoryEntity.Id,
+            ProductId = product.Id,
+            ListingId = listing?.Id,
+        });
+        build.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+
         build = await BuildSnapshotFactory.LoadBySlugAsync(db, slug, ct);
         return Results.Ok(await BuildResponseAsync(build!, db, engine, tdpSeed, ct));
     }
@@ -106,8 +162,30 @@ public static class BuildEndpoints
         if (build is null)
             return Results.NotFound();
 
+        var items = await db.BuildItems
+            .Where(i => i.BuildId == build.Id && i.Category.Slug == category)
+            .ToListAsync(ct);
+        if (items.Count > 0)
+        {
+            db.BuildItems.RemoveRange(items);
+            build.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+        }
+
+        build = await BuildSnapshotFactory.LoadBySlugAsync(db, slug, ct);
+        return Results.Ok(await BuildResponseAsync(build!, db, engine, tdpSeed, ct));
+    }
+
+    /// <summary>Remove uma peça específica (slots multi: apagar só o 2º pente, por exemplo).</summary>
+    private static async Task<IResult> RemoveItemByIdAsync(
+        string slug, Guid itemId, AppDbContext db, CompatibilityEngine engine, TdpSeed tdpSeed, CancellationToken ct)
+    {
+        var build = await BuildSnapshotFactory.LoadBySlugAsync(db, slug, ct);
+        if (build is null)
+            return Results.NotFound();
+
         var item = await db.BuildItems.FirstOrDefaultAsync(
-            i => i.BuildId == build.Id && i.Category.Slug == category, ct);
+            i => i.Id == itemId && i.BuildId == build.Id, ct);
         if (item is not null)
         {
             db.BuildItems.Remove(item);
@@ -174,7 +252,8 @@ public static class BuildEndpoints
                 StoreSlug = g.Key,
                 StoreName = g.First().StoreName,
                 Total = g.Sum(p => p.Price),
-                CoveredItems = g.Select(p => p.ProductId).Distinct().Count(),
+                // conta ocorrências (2 pentes iguais contam 2 peças cobertas)
+                CoveredItems = g.Sum(p => items.Count(i => i.ProductId == p.ProductId)),
                 TotalItems = items.Length,
             })
             .ToArray();
@@ -266,6 +345,7 @@ public static class BuildEndpoints
                 total += price;
 
             items.Add(new BuildItemDto(
+                item.Id,
                 item.Category.Slug,
                 item.ProductId,
                 item.Product?.Name,
@@ -310,6 +390,7 @@ public static class BuildEndpoints
     internal sealed record CreateBuildRequest(string? Name, bool? IsPublic);
     internal sealed record SetItemRequest(Guid ProductId, Guid? ListingId);
     internal sealed record BuildItemDto(
+        Guid Id,
         string Category,
         Guid? ProductId,
         string? Name,

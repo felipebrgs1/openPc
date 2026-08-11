@@ -58,7 +58,7 @@
         <span class="text-right">Preço</span>
       </div>
 
-      @for (item of b.items; track item.category) {
+      @for (item of b.items; track item.id; let i = $index) {
         <div
           class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b border-zinc-100 px-4 py-3 sm:grid-cols-[150px_minmax(0,1fr)_110px]"
         >
@@ -66,7 +66,7 @@
             <span class="text-brand-500">
               <app-category-icon [slug]="item.category" [size]="18" />
             </span>
-            {{ categoryLabel(item.category) }}
+            {{ labelFor(item.category, i, b.items) }}
           </span>
           <span class="flex min-w-0 items-center gap-3">
             @if (item.imageUrl) {

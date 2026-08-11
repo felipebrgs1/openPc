@@ -1,27 +1,37 @@
 namespace OpenPc.Domain.Compatibility.Rules;
 
-/// <summary>Erro §4.2: memory.type != motherboard.memory_type (ddr4|ddr5|ambos).</summary>
+/// <summary>Erro §4.2: qualquer memory.type != motherboard.memory_type (ddr4|ddr5|ambos).</summary>
 public sealed class RamTypeMismatchRule : ICompatibilityRule
 {
     public string Code => "RAM_TYPE_MISMATCH";
 
     public CompatibilityResult? Evaluate(BuildSnapshot build)
     {
-        var memory = build.Part(PartCategory.Memory);
+        var memories = build.PartsOf(PartCategory.Memory);
         var mobo = build.Part(PartCategory.Motherboard);
-        if (memory is null || mobo is null)
+        if (memories.Count == 0 || mobo is null)
             return null;
 
-        var type = memory.Str("type");
         var moboType = mobo.Str("memory_type");
-        if (type is null || moboType is null)
+        if (moboType is null)
             return null;
 
-        if (moboType == "ambos" || string.Equals(type, moboType, StringComparison.OrdinalIgnoreCase))
+        if (moboType == "ambos")
             return null;
 
+        var mismatched = memories
+            .Where(m => m.Str("type") is string t
+                && !string.Equals(t, moboType, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        if (mismatched.Length == 0)
+            return null;
+
+        var types = string.Join("/", mismatched
+            .Select(m => m.Str("type"))
+            .Distinct(StringComparer.OrdinalIgnoreCase));
+        var ids = mismatched.Select(m => m.ProductId).Append(mobo.ProductId).ToArray();
         return new CompatibilityResult(Severity.Error, Code,
-            $"Memória {type} incompatível com a placa-mãe ({moboType}).",
-            [memory.ProductId, mobo.ProductId]);
+            $"Memória {types} incompatível com a placa-mãe ({moboType}).",
+            ids);
     }
 }

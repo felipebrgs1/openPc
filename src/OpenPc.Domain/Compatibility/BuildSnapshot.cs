@@ -22,4 +22,11 @@ public sealed class BuildSnapshot
         var parts = Parts.Where(p => p.Category != part.Category).Append(part).ToArray();
         return new BuildSnapshot { BuildId = BuildId, Slug = Slug, Parts = parts };
     }
+
+    /// <summary>Snapshot hipotético com mais uma peça (slot multi: 2ª memória, 2º SSD).</summary>
+    public BuildSnapshot WithAdditional(PartSpec part)
+    {
+        var parts = Parts.Append(part).ToArray();
+        return new BuildSnapshot { BuildId = BuildId, Slug = Slug, Parts = parts };
+    }
 }

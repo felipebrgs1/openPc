@@ -68,7 +68,19 @@ public static class CatalogEndpoints
             (compatibleIds, blockedBy) = result.Value;
         }
 
-        var cacheKey = $"products|{category}|{q}|{brand}|{minPrice}|{maxPrice}|{sort}|{safeLimit}|{safeOffset}|{compatibleWith}|{showIncompatible}";
+        // O filtro compatibleWith depende do conteúdo do build (slots mudam a
+        // cada mutação): inclui UpdatedAt no cache key para nunca servir o
+        // seletor velho depois de o build mudar.
+        var buildVersion = "";
+        if (!string.IsNullOrWhiteSpace(compatibleWith))
+        {
+            buildVersion = (await db.Builds.AsNoTracking()
+                .Where(b => b.Slug == compatibleWith)
+                .Select(b => b.UpdatedAt)
+                .FirstOrDefaultAsync(ct)).ToString("O");
+        }
+
+        var cacheKey = $"products|{category}|{q}|{brand}|{minPrice}|{maxPrice}|{sort}|{safeLimit}|{safeOffset}|{compatibleWith}|{buildVersion}|{showIncompatible}";
         if (attrs is not null)
             foreach (var (k, v) in attrs.OrderBy(a => a.Key))
                 cacheKey += $"|{k}={v}";
@@ -277,7 +289,10 @@ public static class CatalogEndpoints
             if (part is null)
                 continue;
 
-            var evaluation = engine.Evaluate(snapshot.With(part));
+            var evaluation = engine.Evaluate(
+                PartCategorySlugs.IsMultiSlot(categorySlug)
+                    ? snapshot.WithAdditional(part)
+                    : snapshot.With(part));
             if (!evaluation.HasErrors)
                 compatible?.Add(c.p.Id);
             else if (reasons is not null)

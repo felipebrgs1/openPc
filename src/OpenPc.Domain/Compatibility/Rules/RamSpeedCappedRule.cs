@@ -7,21 +7,24 @@ public sealed class RamSpeedCappedRule : ICompatibilityRule
 
     public CompatibilityResult? Evaluate(BuildSnapshot build)
     {
-        var memory = build.Part(PartCategory.Memory);
+        var memories = build.PartsOf(PartCategory.Memory);
         var cpu = build.Part(PartCategory.Cpu);
-        if (memory is null || cpu is null)
+        if (memories.Count == 0 || cpu is null)
             return null;
 
-        var speed = memory.Num("speed_mhz");
         var max = cpu.Num("max_memory_speed");
-        if (speed is null || max is null)
+        if (max is null)
             return null;
 
-        if (speed <= max)
+        var capped = memories
+            .Where(m => m.Num("speed_mhz") is decimal s && s > max)
+            .ToArray();
+        if (capped.Length == 0)
             return null;
 
+        var ids = capped.Select(m => m.ProductId).Append(cpu.ProductId).ToArray();
         return new CompatibilityResult(Severity.Warning, Code,
-            $"Memória de {speed:0} MHz opera abaixo da velocidade nominal — CPU suporta até {max:0} MHz.",
-            [memory.ProductId, cpu.ProductId]);
+            $"Memória opera abaixo da velocidade nominal — CPU suporta até {max:0} MHz.",
+            ids);
     }
 }

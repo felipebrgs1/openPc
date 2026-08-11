@@ -30,6 +30,12 @@ export class BuildView {
   protected readonly formatDateTime = formatDateTime;
   protected readonly categoryLabel = categoryLabel;
 
+  /** Rótulo com número quando a categoria repete (2ª memória, 2º SSD...). */
+  protected labelFor(category: string, index: number, items: BuildDto['items']): string {
+    const count = items.filter((i) => i.category === category).length;
+    return count > 1 ? `${categoryLabel(category)} ${index + 1}` : categoryLabel(category);
+  }
+
   constructor() {
     this.seo.set('Build compartilhado');
   }
