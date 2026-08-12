@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import type { BuildItemDto, Category, IssueDto, ProductListItem, ProductsResponse } from '../../api';
 import { categoryLabel, isMultiSlot } from '../../api';
@@ -30,6 +30,10 @@ export class Builder {
   protected readonly picker = signal<Category | null>(null);
   protected readonly showIncompatible = signal(false);
   protected readonly pickerQuery = signal('');
+  protected readonly pickerMinPrice = signal<number | null>(null);
+  protected readonly pickerMaxPrice = signal<number | null>(null);
+  protected readonly pickerPage = signal(0);
+  protected readonly PICKER_PAGE_SIZE = 24;
 
   /** Lista do seletor: filtrada pela engine (compatibleWith) ou com motivos (showIncompatible). */
   protected readonly pickerProducts = httpResource<ProductsResponse>(() => {
@@ -42,10 +46,33 @@ export class Builder {
       compatibleWith: slug,
       showIncompatible: String(this.showIncompatible()),
       sort: 'price_asc',
-      limit: '100',
+      limit: String(this.PICKER_PAGE_SIZE),
+      offset: String(this.pickerPage() * this.PICKER_PAGE_SIZE),
     });
     if (q) params.set('q', q);
+    const min = this.pickerMinPrice();
+    const max = this.pickerMaxPrice();
+    if (min != null) params.set('minPrice', String(min));
+    if (max != null) params.set('maxPrice', String(max));
     return `/api/v1/products?${params.toString()}`;
+  });
+
+  // O reload (troca de página ou filtro) zera value() do httpResource e a
+  // lista some do modal. lastGood mantém o último resultado renderizado para
+  // a lista não colapsar enquanto a próxima página carrega.
+  private readonly pickerLastGood = signal<ProductsResponse | null>(null);
+
+  protected readonly pickerPageData = computed<ProductsResponse | null>(() => {
+    try {
+      return this.pickerProducts.value() ?? this.pickerLastGood();
+    } catch {
+      return this.pickerLastGood(); // erro no reload: mostra dados anteriores
+    }
+  });
+
+  protected readonly pickerTotalPages = computed(() => {
+    const total = this.pickerPageData()?.total ?? 0;
+    return Math.max(1, Math.ceil(total / this.PICKER_PAGE_SIZE));
   });
 
   protected readonly itemsByCategory = computed(() => {
@@ -75,6 +102,27 @@ export class Builder {
       'Montar meu PC',
       'Monte um PC completo com filtro de compatibilidade automático entre Kabum, Terabyte e Pichau.',
     );
+
+    // Troca de filtro (busca, faixa de preço, incompatíveis) ou de categoria
+    // volta o seletor para a primeira página.
+    effect(() => {
+      this.picker();
+      this.pickerQuery();
+      this.pickerMinPrice();
+      this.pickerMaxPrice();
+      this.showIncompatible();
+      this.pickerPage.set(0);
+    });
+
+    effect(() => {
+      try {
+        const v = this.pickerProducts.value();
+        if (v) this.pickerLastGood.set(v);
+      } catch {
+        // erro no reload: mantém o último bom
+      }
+    });
+
     void this.init();
   }
 
@@ -91,6 +139,10 @@ export class Builder {
     this.picker.set(cat);
     this.showIncompatible.set(false);
     this.pickerQuery.set('');
+    this.pickerMinPrice.set(null);
+    this.pickerMaxPrice.set(null);
+    this.pickerPage.set(0);
+    this.pickerLastGood.set(null); // não deixa a lista da categoria anterior piscar
   }
 
   protected closePicker(): void {
@@ -99,6 +151,33 @@ export class Builder {
 
   protected onPickerSearch(event: Event): void {
     this.pickerQuery.set((event.target as HTMLInputElement).value);
+  }
+
+  protected applyPickerPriceFilter(minEl: HTMLInputElement, maxEl: HTMLInputElement): void {
+    this.pickerMinPrice.set(this.parsePrice(minEl.value));
+    this.pickerMaxPrice.set(this.parsePrice(maxEl.value));
+  }
+
+  protected clearPickerPriceFilter(minEl: HTMLInputElement, maxEl: HTMLInputElement): void {
+    minEl.value = '';
+    maxEl.value = '';
+    this.pickerMinPrice.set(null);
+    this.pickerMaxPrice.set(null);
+  }
+
+  private parsePrice(raw: string): number | null {
+    const v = Number(raw.replace(',', '.'));
+    return Number.isFinite(v) && v > 0 ? v : null;
+  }
+
+  protected nextPickerPage(): void {
+    if (this.pickerPage() + 1 < this.pickerTotalPages()) {
+      this.pickerPage.update((p) => p + 1);
+    }
+  }
+
+  protected prevPickerPage(): void {
+    this.pickerPage.update((p) => Math.max(0, p - 1));
   }
 
   protected async select(cat: Category, product: ProductListItem): Promise<void> {
