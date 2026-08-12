@@ -294,6 +294,74 @@ public static class CategoryNoiseFilter
         @"\b(adaptador|case|caddy|gaveta|baias?|capas?|caixa extern\w*|cabos?|placa|conversor|duplicador|clones?|encaixe|compartimento|cartucho|ventilador|enclosures?|dock\w*)\b",
         RegexOptions.Compiled);
 
+    // ==================== Cooler ====================
+    // O slot do builder é cooler de CPU (torre/AIO); a categoria das lojas
+    // mistura ventoinhas, microventiladores, controladoras e acessórios.
+
+    /// <summary>Marcadores de cooler de CPU legítimo — excluem os padrões de ventoinha.</summary>
+    private static readonly Regex CoolerCpuMarker = new(
+        @"para processador|para cpu|para computador|air cooler|cpu cooler|water cooler|watercooler"
+        + @"|(?<![a-z0-9])aio(?![a-z0-9])|torre|tower|tdp|heat ?pipe|radiator|radiad|soquete|socket|lga"
+        + @"|(?<![0-9])(1700|1851)(?![0-9])|(?<![a-z0-9])(am4|am5)(?![a-z0-9])",
+        RegexOptions.Compiled);
+
+    /// <summary>"fan" solto = ventoinha ("Cooler FAN", "Fan 120mm", "Kit 2 Fans").</summary>
+    private static readonly Regex CoolerFan = new(@"\bfan\b", RegexOptions.Compiled);
+
+    /// <summary>"ventoinha(s)"/"ventilador(es)" = ventoinha; torres/AIO que descrevem as ventoinhas inclusas têm a exclusão abaixo.</summary>
+    private static readonly Regex CoolerFanWord = new(
+        @"\b(ventoinha\w*|ventilador\w*)\b",
+        RegexOptions.Compiled);
+
+    private static readonly Regex CoolerFanWordExclusion = new(
+        @"air cooler|cpu cooler|torre|tower|heat ?pipe|radiator|radiad",
+        RegexOptions.Compiled);
+
+    /// <summary>Controladoras/hubs de ventoinha e LED — AIO não cita controladora no título.</summary>
+    private static readonly Regex CoolerController = new(
+        @"\b(controlador\w*|hub)\b",
+        RegexOptions.Compiled);
+
+    private static readonly Regex CoolerAio = new(
+        @"water cooler|watercooler|aio",
+        RegexOptions.Compiled);
+
+    /// <summary>"Cooler 120mm/80mm/12x12/120x120..." sem marcador de CPU cooler = ventoinha avulsa.</summary>
+    private static readonly Regex CoolerFanSize = new(
+        @"\bcooler\b.*(?<![0-9])(120\s*mm|12\s*x\s*12|120x120|12\s*cm|80\s*mm|90\s*mm|92\s*mm|140\s*mm)(?![0-9])",
+        RegexOptions.Compiled);
+
+    /// <summary>Formato de ventoinha com 3 dimensões ("60x60x38mm", "120x120x25mm").</summary>
+    private static readonly Regex CoolerFanDimensions = new(
+        @"(?<![0-9])\d{2,3}\s*x\s*\d{2,3}\s*x\s*\d{2,3}\s*mm(?![0-9])",
+        RegexOptions.Compiled);
+
+    /// <summary>Cooler de máquina específica (reposição de notebook/OEM). AIOs de marca (Water Cooler Acer/TUF) ficam.</summary>
+    private static readonly string[] CoolerMachineKeywords =
+    [
+        "ideapad", "aspire", "aspiron", "thinkpad", "inspiron", "latitude", "pavilion",
+        "probook", "elitebook", "zenbook", "vivobook", "macbook", "vaio", "nitro", "acer",
+        "predator", "helios", "omen", "legion", "tuf", "envy", "vostro", "optiplex",
+        "thinkcentre", "thinkstation", "ideacentre", "workstation", "servidor", "server",
+    ];
+
+    /// <summary>Acessórios e microventiladores sem marcador de cooler de CPU.</summary>
+    private static readonly string[] CoolerAccessoryKeywords =
+    [
+        "microventilador", "micro ventilador", "thermal pad", "almofada termica",
+        "thermal grease", "metal liquido", "notebook", "laptop", "parafuso",
+        "sincroniza", "splitter",
+    ];
+
+    /// <summary>Socket antigo explícito (1150/1151/1155/1156/1200/1366/775, 115x, 20xx) sem nenhum moderno (1700/1851/AM4/AM5) = não monta CPU do catálogo.</summary>
+    private static readonly Regex CoolerOldSocket = new(
+        @"\b(lga|soquete|socket)\b.*(?<![0-9])(1150|1151|1155|1156|1200|1366|775|115x|20xx)(?![0-9])",
+        RegexOptions.Compiled);
+
+    private static readonly Regex CoolerModernSocket = new(
+        @"(?<![0-9])(1700|1851)(?![0-9])|(?<![a-z0-9])(am4|am5)(?![a-z0-9])",
+        RegexOptions.Compiled);
+
     /// <summary>true = produto não pertence à categoria (descartar/remover).</summary>
     public static bool IsNoise(string categorySlug, string? title)
     {
@@ -313,6 +381,48 @@ public static class CategoryNoiseFilter
         foreach (var (category, regex) in CategoryRegexRules)
         {
             if (category == categorySlug && regex.IsMatch(text))
+                return true;
+        }
+
+        // Cooler: o slot do builder é COOLER DE CPU (torre/AIO). A categoria
+        // das lojas mistura ventoinhas de gabinete, microventiladores,
+        // controladoras, cabos, parafusos e acessórios — tudo ruído aqui.
+        if (categorySlug == "cooler")
+        {
+            // Acessórios e microventiladores (pasta térmica já está em KeywordRules).
+            foreach (var kw in CoolerAccessoryKeywords)
+            {
+                if (text.Contains(kw, StringComparison.Ordinal))
+                    return true;
+            }
+
+            // Marcadores de cooler de CPU legítimo — excluem os padrões de
+            // ventoinha: torres/AIO citam a ventoinha inclusa no título
+            // ("TRYX Turris ... 2 Ventoinhas 120mm", "AK400 ... 4 Heatpipes
+            // Fan 120mm", "Jonsbo CR-1400 ... Radiador Ventilador").
+            if (CoolerFan.IsMatch(text) && !CoolerCpuMarker.IsMatch(text))
+                return true;
+            if (CoolerFanWord.IsMatch(text) && !CoolerFanWordExclusion.IsMatch(text))
+                return true;
+            if (CoolerController.IsMatch(text) && !CoolerAio.IsMatch(text))
+                return true;
+            // "Cooler 120mm/80mm/12x12" sem marcador de CPU cooler = ventoinha
+            // avulsa ("Cooler 120mm Gaming Master", "Cooler 12x12 Brazilpc").
+            // Torres de 120mm citam socket/processador/marca ("Air Cooler
+            // Rise Mode X2 120mm").
+            if (CoolerFanSize.IsMatch(text)
+                && !CoolerCpuMarker.IsMatch(text) && !text.Contains("intel") && !text.Contains("amd"))
+                return true;
+            if (CoolerFanDimensions.IsMatch(text) && !CoolerCpuMarker.IsMatch(text))
+                return true;
+            // Cooler de máquina específica (reposição de notebook/OEM):
+            // "Cooler Lenovo Ideapad", "Cooler Cpu ... Para Acer 4830".
+            // AIOs de marca (Water Cooler Acer/TUF) ficam.
+            if (CoolerMachineKeywords.Any(text.Contains) && !CoolerAio.IsMatch(text))
+                return true;
+            // Socket antigo no título sem nenhum moderno = não monta CPU do
+            // catálogo — mesma política da whitelist ModernMotherboard.
+            if (CoolerOldSocket.IsMatch(text) && !CoolerModernSocket.IsMatch(text))
                 return true;
         }
 
