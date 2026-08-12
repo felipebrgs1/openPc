@@ -2,11 +2,11 @@
 name = "openpc-scraper"
 version = "0.1.0"
 description = "Scraper OpenPC (port do scraper C#) — Kabum HTTP + Pichau/Terabyte Playwright"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "httpx>=0.28",
     "parsel>=1.11",
-    "playwright>=1.49",
+    "playwright==1.49.1",
     "sqlalchemy[asyncio]>=2.0",
     "asyncpg>=0.30",
     "apscheduler>=3.11",
