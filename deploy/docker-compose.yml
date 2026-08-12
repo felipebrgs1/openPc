@@ -69,9 +69,7 @@ services:
       start_period: 20s
       retries: 3
 
-  # Scraper removido do compose de produção: coleta não roda mais na VPS.
-  # A imagem continua sendo buildada no CI (usada para backfill manual:
-  # docker run ... openpc-scraper sync-images).
+  # Coleta não roda mais na VPS (scraper Python roda sob demanda).
 
   db:
     image: postgres:18
@@ -126,7 +124,7 @@ services:
       db:
         condition: service_healthy
 
-  # Fotos do catálogo (S3) — o scraper sobe as imagens dos CDNs das lojas e o
+  # Fotos do catálogo (S3) — o scraper Python sobe as imagens dos CDNs e o
   # Caddy serve em /images/* (bucket público de leitura). Só a rede interna
   # acessa; nenhuma porta exposta.
   minio:
