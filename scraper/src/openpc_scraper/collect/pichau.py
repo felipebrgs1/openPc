@@ -71,7 +71,7 @@ class PichauCollector(BrowserCollector):
                 "a[href*=\"/fonte-\"], a[href*=\"/gabinete-\"], a[href*=\"/water-cooler-\"]'); "
                 "return a && a.href !== prev; }"
             )
-            await page.wait_for_function(wait_js, prev_first_href, timeout=15_000)
+            await page.wait_for_function(wait_js, arg=prev_first_href, timeout=15_000)
         except TimeoutError:
             return False
         await asyncio.sleep(1.5)
