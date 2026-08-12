@@ -7,14 +7,7 @@
 # Cenário 1 — só a API (db + redis + api; reusa o banco de dev):
 #   docker compose -f deploy/docker-compose.dev.yml up -d --build db redis api
 #
-# Cenário 2 — só o scraper (db + migrate one-shot + scraper; o schema é
-#   criado pelo serviço `migrate`, que roda a API com --migrate-only):
-#   docker compose -f deploy/docker-compose.dev.yml up -d --build db scraper
-#   # coleta manual (ex: Kabum, categoria cpu):
-#   docker compose -f deploy/docker-compose.dev.yml exec scraper \
-#     dotnet run --project src/OpenPc.Scraper/OpenPc.Scraper.csproj -- run-once kabum cpu
-#
-# Cenário 3 — front na Cloudflare Worker (detalhes em web/wrangler.jsonc):
+# Cenário 2 — front na Cloudflare Worker (detalhes em web/wrangler.jsonc):
 #   cd web && npm run dev:cf     # local: http://localhost:8787 (/api -> localhost:5080)
 #   cd web && npm run deploy:cf  # publica na Cloudflare
 #
@@ -104,8 +97,7 @@ services:
         condition: service_started
 
   # One-shot: aplica migrations + seed (API com --migrate-only) e encerra.
-  # Em runtime a API é quem migra; aqui só preparamos o banco para o
-  # cenário "só scraper" (scraper não roda migrations — decisão M2).
+  # Em runtime a API é quem migra; aqui só preparamos o banco (decisão M2).
   migrate:
     build:
       context: ..
@@ -118,7 +110,7 @@ services:
       db:
         condition: service_healthy
 
-  # Fotos do catálogo (S3) — mesmo papel do MinIO de produção; só o scraper
+  # Fotos do catálogo (S3) — mesmo papel do MinIO de produção; o scraper
   # escreve e o Caddy de dev não expõe /images (para ver, use o console :9001).
   minio:
     image: minio/minio:latest
@@ -149,35 +141,6 @@ services:
     depends_on:
       minio:
         condition: service_healthy
-
-  scraper:
-    build:
-      context: ..
-      dockerfile: src/OpenPc.Scraper/Dockerfile
-      target: development
-    environment:
-      ConnectionStrings__Default: Host=db;Port=5432;Database=openpc;Username=openpc;Password=openpc_dev
-      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
-      Minio__Endpoint: minio:9000
-      Minio__AccessKey: minioadmin
-      Minio__SecretKey: minioadmin
-      Minio__Bucket: openpc-images
-      Minio__PublicPath: /images
-      Minio__UseSsl: "false"
-    volumes:
-      - ../src:/src/src
-      - ../Directory.Build.props:/src/Directory.Build.props:ro
-      - ../Directory.Packages.props:/src/Directory.Packages.props:ro
-      - /src/src/OpenPc.Api/obj
-      - /src/src/OpenPc.Domain/obj
-      - /src/src/OpenPc.Infrastructure/obj
-      - /src/src/OpenPc.Scraper/obj
-      - ~/.cache/ms-playwright:/ms-playwright
-    depends_on:
-      db:
-        condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
 
 volumes:
   pgdata:

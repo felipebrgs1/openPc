@@ -3,10 +3,8 @@
     <Project Path="src/OpenPc.Api/OpenPc.Api.csproj" />
     <Project Path="src/OpenPc.Domain/OpenPc.Domain.csproj" />
     <Project Path="src/OpenPc.Infrastructure/OpenPc.Infrastructure.csproj" />
-    <Project Path="src/OpenPc.Scraper/OpenPc.Scraper.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/OpenPc.Scraper.Tests/OpenPc.Scraper.Tests.csproj" />
     <Project Path="tests/OpenPc.Domain.Tests/OpenPc.Domain.Tests.csproj" />
   </Folder>
 </Solution>
