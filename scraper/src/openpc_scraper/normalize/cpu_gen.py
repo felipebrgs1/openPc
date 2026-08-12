@@ -29,17 +29,17 @@ def classify(model: str | None) -> str | None:
 
     m = model.lower()
 
-    if "ryzen" in m or m.startswith("amd"):
-        # AMD fora da matriz desktop: Athlon, A-series, FX, Sempron, Phenom,
-        # Opteron. Só "startsWith amd" não basta: "Athlon 3000g" tem 4 dígitos
-        # (daria zen2) e "A10-5800K" tem "5800" (daria zen3) — ambos
-        # classificados errado. Títulos com ruído de loja ("Amd Ryzen Athlon
-        # 3000g") caem aqui também.
-        if any(k in m for k in ("athlon", "sempron", "phenom", "opteron")):
-            return None
-        if _AMD_SERIES_RE.search(m) or _FX_RE.search(m):
-            return None
+    # AMD fora da matriz desktop (Athlon, A-series, FX, Sempron, Phenom,
+    # Opteron) — checado ANTES dos branches: o título cru pode ter
+    # "Processador " na frente (não começa com "amd") e "dualcore" contém
+    # "core" (entraria no branch Intel e "235e" casaria UltraFamily →
+    # arrow-lake falso). Mesmo caso do C#: "Amd Ryzen Athlon 3000g".
+    if any(k in m for k in ("athlon", "sempron", "phenom", "opteron")):
+        return None
+    if _AMD_SERIES_RE.search(m) or _FX_RE.search(m):
+        return None
 
+    if "ryzen" in m or m.startswith("amd"):
         four = _FOUR_DIGIT_RE.search(m)
         if not four:
             return None
