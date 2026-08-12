@@ -292,14 +292,32 @@
         />
       </div>
 
+      <form
+        class="flex items-center gap-2 border-b border-zinc-100 px-4 py-2.5"
+        (submit)="applyPickerPriceFilter(minEl, maxEl); $event.preventDefault()"
+      >
+        <span class="shrink-0 text-xs font-medium text-zinc-500">Preço</span>
+        <input #minEl type="number" min="0" placeholder="Mín" class="input !py-1.5" />
+        <span class="text-zinc-400">–</span>
+        <input #maxEl type="number" min="0" placeholder="Máx" class="input !py-1.5" />
+        <button type="submit" class="btn-primary shrink-0 !px-3 !py-1.5">Aplicar</button>
+        <button
+          type="button"
+          (click)="clearPickerPriceFilter(minEl, maxEl)"
+          class="btn-ghost shrink-0 !px-2 !py-1.5"
+        >
+          Limpar
+        </button>
+      </form>
+
       <div class="overflow-y-auto">
-        @if (pickerProducts.isLoading()) {
+        @if (pickerProducts.isLoading() && !pickerPageData()) {
           <p class="p-4 text-sm text-zinc-500">Carregando peças...</p>
-        } @else if (pickerProducts.error()) {
+        } @else if (pickerProducts.error() && !pickerPageData()) {
           <p class="p-4 text-sm text-red-600">Não foi possível carregar as peças.</p>
         } @else {
           <ul class="divide-y divide-zinc-100">
-            @for (product of pickerProducts.value()?.items; track product.id) {
+            @for (product of pickerPageData()?.items; track product.id) {
               <li>
                 <button
                   type="button"
@@ -340,6 +358,36 @@
           </ul>
         }
       </div>
+
+      @let pickerData = pickerPageData();
+      @if (pickerData && pickerData.total > 0) {
+        <div class="flex items-center justify-between gap-3 border-t border-zinc-100 bg-zinc-50 px-4 py-2.5">
+          <p class="shrink-0 text-xs text-zinc-500">
+            {{ pickerData?.items.length }} de {{ pickerData?.total }} peças
+          </p>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="prevPickerPage()"
+              [disabled]="pickerPage() === 0"
+              class="btn-ghost !px-2.5 !py-1"
+            >
+              ‹ Anterior
+            </button>
+            <span class="text-xs text-zinc-500">
+              Página {{ pickerPage() + 1 }} de {{ pickerTotalPages() }}
+            </span>
+            <button
+              type="button"
+              (click)="nextPickerPage()"
+              [disabled]="pickerPage() + 1 >= pickerTotalPages()"
+              class="btn-ghost !px-2.5 !py-1"
+            >
+              Próxima ›
+            </button>
+          </div>
+        </div>
+      }
     </div>
   </div>
 }
