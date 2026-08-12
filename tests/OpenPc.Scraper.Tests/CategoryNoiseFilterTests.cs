@@ -156,6 +156,58 @@ public class CategoryNoiseFilterTests
     }
 
     [Theory]
+    // Ventoinhas de gabinete avulsas (a categoria da loja mistura com cooler de CPU)
+    [InlineData("cooler", "Cooler FAN Rise Mode Galaxy G1, S-LED, Azul - RM-FN-01-BB")]
+    [InlineData("cooler", "Fan 120mm Kalkan Lumen RGB Preto Klk00018")]
+    [InlineData("cooler", "Ventoinha Rise Mode Wind W1 120mm LED Branco Preto - RM-WN-01-BW")]
+    [InlineData("cooler", "Kit com 3 Ventoinhas Rise Mode X Led Rainbow, 120mm, Branco - RM-XLD-02-RBW")]
+    [InlineData("cooler", "Ventoinha, Cooler Fan, Para Processador Intel, AMD, LED, RGB, Silencioso 120mm")]
+    [InlineData("cooler", "Cooler 120mm Gaming Master - Com LED RGB Rainbow")]
+    [InlineData("cooler", "Cooler 12x12 Brazilpc BPC, Dl1252 Red Led Duplo - Vermelho")]
+    [InlineData("cooler", "Cooler Liketec Lighter, RGB, 120x120x25mm, Preto")]
+    [InlineData("cooler", "Cooler Refrigerador 80x80x25mm Foxconn Pva080g12q")]
+    [InlineData("cooler", "Cooler 60x60x38mm Dc12v 1.20a Avc Dbtc0638b2u P008 4 Fios")]
+    // Microventiladores / acessórios / cabos / controladoras
+    [InlineData("cooler", "Microventilador Cooler Ventoinha 40x40x10 12 Volts")]
+    [InlineData("cooler", "Micro ventilador Loud, 60x60x20mm, 12v - RDD6020S12M")]
+    [InlineData("cooler", "Cabo de Sincronização PWM 4 Pinos, Para Controlador de Cooler Fan 2 Pinos")]
+    [InlineData("cooler", "Controladora ARGB K-mex 6 Pinos Para Cooler Para LED Com Controle Remoto")]
+    [InlineData("cooler", "Hub Multi Fans, Para 5 Cooler, 3 E 4 Pinos, Controle Pwm")]
+    [InlineData("cooler", "Kit Alloyseed, Modelo Longo 32mm, Parafuso Water Cooler Push-and-pull, Preto")]
+    [InlineData("cooler", "Thermal Pad Tishric 0.5mm Cpu Gpu Alta Eficiência 100mm Tsr139")]
+    // Reposição de máquina específica (notebook/OEM)
+    [InlineData("cooler", "Cooler Notebook Lenovo Ideapad S145 S145-15iwl")]
+    [InlineData("cooler", "Cooler Cpu Dissipador Ventilador Para Acer 4830, 4830tg")]
+    // Socket antigo (não monta CPU do catálogo)
+    [InlineData("cooler", "Cooler Para Processador Low Profile Cooler Master H115 LGA 115x LGA 1200")]
+    [InlineData("cooler", "Cooler Para Processador Knup, Intel, LGA 1156 / 1155 / 1150 / 1151, RPM 2200")]
+    [InlineData("cooler", "Cooler Para Cpu Universal Com 21 Leds Azul Dx-2021 socket 1366/ 1150/ 1156/ 775 - AMD: FM2+/ FM2/ FM1/ AM3+/ AM3/ AM2+/")]
+    public void IsNoise_CoolerComVentoinhaOuAcessorio_True(string category, string title)
+    {
+        Assert.True(CategoryNoiseFilter.IsNoise(category, title));
+    }
+
+    [Theory]
+    // Torres/AIO legítimos que citam ventoinha/fan/controladora no título
+    [InlineData("cooler", "Air Cooler TRYX Turris T620, Dual Tower, Display LCD, 6 Heat Pipes, 2 Ventoinhas 120mm, AMD e Intel")]
+    [InlineData("cooler", "Air Cooler Gamerstorm X Redragon Ak400 Rd Preto 4 Heatpipes Fan 120 Mm")]
+    [InlineData("cooler", "Cooler Thermaltake Ux500 ARGB White 1 Fan Intel/amd Universal Socket Compatibility")]
+    [InlineData("cooler", "Cooler Jonsbo para CPU Radiador Ventilador, RGB AMD & Intel - Cr-1400")]
+    [InlineData("cooler", "Water Cooler Acer 240mm ARGB Ac240yn Branco")]
+    [InlineData("cooler", "Water Cooler ASUS TUF Gaming LC III, 360mm, ARGB, Intel-AMD, Preto")]
+    [InlineData("cooler", "Water Cooler G-vr360pro 360mm RGB E Controle Pwm Tdp 300w")]
+    // Torres de 120mm/90mm com marcador de CPU cooler
+    [InlineData("cooler", "Air Cooler Gamer Rise Mode X2 120mm Preto/Azul - RM-ACX-02-BB")]
+    [InlineData("cooler", "Cooler Para Processador Rise Mode X4, RGB, 90mm, Intel, RM-ACX-04-RGB")]
+    [InlineData("cooler", "Cooler Processador Ac04 120mm Amdintel Ate LGA 1700multicolor")]
+    // Socket moderno no título (lista com antigos + 1700)
+    [InlineData("cooler", "Cooler Para Processador Get, Socket Intel LGA 1150/1151/1155/1156/1700, Conector 4 Pinos, 2400 Rpm")]
+    public void IsNoise_CoolerDeCpuLegitimo_False(string category, string title)
+    {
+        Assert.False(CategoryNoiseFilter.IsNoise(category, title));
+    }
+
+    [Theory]
     [InlineData("gpu", "Suporte para GPU Rise Mode, ARGB, 500mm, Aura V2")]
     [InlineData("gpu", "Suporte Vertical Gpu Placa De Video Bracket PCi-e 4.0 16x")]
     public void IsNoise_GpuComSuporteParaGpuOuVertical_True(string category, string title)
