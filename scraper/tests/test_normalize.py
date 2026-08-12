@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from openpc_scraper.normalize import gpu_series, match_key, part_number, price, spec_extractor
+from openpc_scraper.normalize import cpu_gen, gpu_series, match_key, part_number, price, spec_extractor
 from openpc_scraper.collect.kabum import parse_next_data, KabumParseError
 
 FIXTURE = Path(__file__).parent / "fixtures_kabum.html"
@@ -206,3 +206,41 @@ class TestCardListingBuilder:
         assert listing.specs["socket"] == "am5"
         assert "7600X3D" in listing.title
         assert listing.thumbnail == "https://img.pichau.com.br/processador/7600x3d.jpg"
+
+
+class TestCpuGenerationPort:
+    """Port do teste CpuGenerationTests.cs + bug do título cru (dualcore)."""
+
+    def test_titulo_cru_com_dualcore_nao_vira_arrow_lake(self) -> None:
+        # "Processador " na frente + "dualcore" (contém "core") fazia o
+        # "235e" casar UltraFamily → arrow-lake falso (bug real em produção:
+        # o Athlon II X2 235e da Kabum entrou no catálogo).
+        from openpc_scraper.normalize import noise_filter
+
+        title = "Processador Amd Athlon Ii X2 235e 2mb Dualcore Socket Am3"
+        assert cpu_gen.classify(title) is None
+        assert noise_filter.is_noise("cpu", title) is True
+
+    def test_athlon_3000g(self) -> None:
+        # "Athlon 3000g" tem 4 dígitos (daria zen2) — fora da matriz
+        assert cpu_gen.classify("Amd Ryzen Athlon 3000g") is None
+        assert cpu_gen.classify("AMD Athlon 3000g, 3.5GHz, AM4") is None
+
+    def test_a_series_e_fx(self) -> None:
+        assert cpu_gen.classify("AMD A10-5800K, 3.8GHz, FM2") is None
+        assert cpu_gen.classify("AMD FX-8350, 4.0GHz, AM3+") is None
+
+    def test_ryzen_geracoes(self) -> None:
+        assert cpu_gen.classify("amd 7600") == "zen4"
+        assert cpu_gen.classify("amd 5700x") == "zen3"
+        assert cpu_gen.classify("amd 9800x3d") == "zen5"
+        assert cpu_gen.classify("amd 1600") == "zen1"
+        assert cpu_gen.classify("amd 5600g") == "zen3"
+
+    def test_intel_geracoes(self) -> None:
+        assert cpu_gen.classify("intel 12400f") == "alder-lake"
+        assert cpu_gen.classify("intel 13700k") == "raptor-lake"
+        assert cpu_gen.classify("intel 14700k") == "raptor-lake-refresh"
+        assert cpu_gen.classify("intel 265f") == "arrow-lake"
+        assert cpu_gen.classify("intel 10400") is None  # 10ª gen — fora da matriz
+        assert cpu_gen.classify("intel 9700") is None
