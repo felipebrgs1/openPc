@@ -1,6 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <!-- O spike é um projeto isolado: não participa do CPM central da solução. -->
-    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-</Project>
