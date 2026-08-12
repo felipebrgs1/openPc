@@ -4,7 +4,7 @@
 # Uso: docker run --env DATABASE_URL=... openpc-scraper run-once kabum cpu
 # ============================================================
 
-FROM mcr.microsoft.com/playwright/python:v1.49.1-noble
+FROM mcr.microsoft.com/playwright/python:v1.61.0-noble
 
 WORKDIR /app
 

@@ -6,7 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "httpx>=0.28",
     "parsel>=1.11",
-    "playwright==1.49.1",
+    "playwright==1.61.0",
     "sqlalchemy[asyncio]>=2.0",
     "asyncpg>=0.30",
     "apscheduler>=3.11",
