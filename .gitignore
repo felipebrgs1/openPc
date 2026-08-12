@@ -13,6 +13,13 @@ web/.angular/
 web/.tmp/
 npm-debug.log*
 
+# --- Python (scraper) ---
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+
 # --- Ambiente ---
 .env
 .env.*
