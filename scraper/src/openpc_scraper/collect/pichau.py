@@ -74,5 +74,5 @@ class PichauCollector(BrowserCollector):
             await page.wait_for_function(wait_js, arg=prev_first_href, timeout=15_000)
         except TimeoutError:
             return False
-        await asyncio.sleep(1.5)
+        await asyncio.sleep(0.8)
         return True

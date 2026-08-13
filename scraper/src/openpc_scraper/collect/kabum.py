@@ -130,8 +130,14 @@ async def collect(
     category: str,
     max_pages: int | None = None,
     delay: tuple[float, float] = (1.5, 2.5),
+    concurrency: int = 3,
 ) -> list[RawListing]:
-    """Coleta a categoria inteira (ou até max_pages) e normaliza os itens."""
+    """Coleta a categoria inteira (ou até max_pages) e normaliza os itens.
+
+    As páginas são buscadas em ondas concorrentes de N páginas (vs. o fetch
+    sequencial do C# original) — várias vezes mais rápido, mantendo o
+    intervalo entre ondas para não estourar o rate limit.
+    """
     path = CATEGORY_PATHS.get(category)
     if path is None:
         raise ValueError(f"Kabum: categoria '{category}' sem rota mapeada.")
@@ -140,13 +146,20 @@ async def collect(
     page = 1
     async with httpx.AsyncClient(headers=HEADERS, timeout=httpx.Timeout(30.0), follow_redirects=True) as client:
         while max_pages is None or page <= max_pages:
-            batch = await fetch_page(client, path, page)
-            if not batch:
+            end = page + max(1, concurrency)
+            if max_pages is not None:
+                end = min(end, max_pages + 1)
+            batches = await asyncio.gather(
+                *(fetch_page(client, path, p) for p in range(page, end))
+            )
+            short = False
+            for batch in batches:
+                listings.extend(build_listing(i, category) for i in batch)
+                if len(batch) < PAGE_SIZE:
+                    short = True  # última página — para após esta onda
+            if short:
                 break
-            listings.extend(build_listing(i, category) for i in batch)
-            if len(batch) < PAGE_SIZE:
-                break
-            page += 1
+            page = end
             await asyncio.sleep(random.uniform(*delay))
     return listings
 

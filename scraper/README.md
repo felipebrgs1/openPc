@@ -27,7 +27,7 @@ perfeito por listing SKU/part number/match key), 467 ruídos descartados
 ## Comandos
 
 ```bash
-uv run python -m openpc_scraper run-once [store] [category]   # coleta imediata
+uv run python -m openpc_scraper run-once [store] [category] [--concurrency N]   # coleta imediata (jobs em paralelo)
 uv run python -m openpc_scraper cleanup-noise [category] [--dry-run]
 uv run python -m openpc_scraper aggregate-prices [days]
 uv run python -m openpc_scraper sync-images
@@ -36,11 +36,17 @@ uv run python -m openpc_scraper backfill-attributes
 uv run python -m openpc_scraper scheduler                     # agendamento
 ```
 
+O `run-once` coleta em paralelo (default 4 jobs simultâneos, máx. 2 por
+loja); a ingestão continua serializada para preservar o dedup e as
+constraints. Use `--concurrency 1` para o comportamento sequencial.
+O Kabum busca páginas em ondas concorrentes de 3 (vs. fetch sequencial).
+
 Configuração via env:
 
 | Variável | Uso |
 |---|---|
 | `DATABASE_URL` ou `ConnectionStrings__Default` | Postgres (aceita formato ADO.NET `Host=...`) |
+| `SCRAPE_CONCURRENCY` | nº de jobs coletados em paralelo no `run-once` (default 4; 1 = sequencial) |
 | `ALERTS_WEBHOOK_URL` | webhook de run falho |
 | `SMTP_HOST`/`SMTP_PORT`/`SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_FROM` | e-mail de alertas (sem host = dry-run) |
 | `MINIO_ENDPOINT`/`MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`/`MINIO_BUCKET`/`MINIO_PUBLIC_PATH` | sync de imagens (sem endpoint = no-op) |
