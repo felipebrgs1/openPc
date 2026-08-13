@@ -121,6 +121,7 @@ public static class CatalogEndpoints
             p.PartNumber,
             p.ImageUrl,
             CategorySlug = p.Category.Slug,
+            p.CreatedAt,
             Price = p.Listings
                 .Where(l => l.InStock && l.PriceCash != null)
                 .Min(l => (decimal?)l.PriceCash),
@@ -140,6 +141,7 @@ public static class CatalogEndpoints
         {
             "price_desc" => projected.OrderByDescending(x => x.Price),
             "name" => projected.OrderBy(x => x.Name),
+            "newest" => projected.OrderByDescending(x => x.CreatedAt),
             _ => projected.OrderBy(x => x.Price), // price_asc (default)
         };
 

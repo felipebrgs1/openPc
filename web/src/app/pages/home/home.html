@@ -51,6 +51,128 @@
   }
 </section>
 
+<section class="mt-10">
+  <div class="flex items-baseline justify-between">
+    <h2 class="text-lg font-semibold text-zinc-900">Ofertas em produtos acima de R$ 1.000</h2>
+    <a routerLink="/ofertas" class="text-sm font-medium text-brand-600 hover:text-brand-700">
+      Ver todas as ofertas →
+    </a>
+  </div>
+
+  @if (offers.isLoading()) {
+    <p class="mt-4 text-sm text-zinc-500">Carregando ofertas...</p>
+  } @else if (offers.error()) {
+    <p class="mt-4 text-sm text-red-600">
+      Não foi possível carregar as ofertas. Verifique se a API está no ar.
+    </p>
+  } @else if (offers.value()!.items.length === 0) {
+    <p class="card mt-4 p-6 text-center text-sm text-zinc-500">
+      Nenhuma queda de preço encontrada nos últimos 7 dias.
+    </p>
+  } @else {
+    <ul class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      @for (offer of offers.value()!.items; track offer.product.id) {
+        <li class="card group flex flex-col p-4 transition hover:border-brand-400 hover:shadow">
+          <a
+            routerLink="/pecas/{{ offer.product.categorySlug }}/{{ offer.product.id }}"
+            class="flex min-w-0 flex-1 flex-col"
+          >
+            <span
+              class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-zinc-50 p-1"
+            >
+              @if (offer.product.imageUrl) {
+                <img
+                  [src]="offer.product.imageUrl"
+                  [alt]="offer.product.name"
+                  loading="lazy"
+                  class="max-h-full max-w-full object-contain"
+                />
+              } @else {
+                <span class="text-[10px] text-zinc-400">Sem img</span>
+              }
+            </span>
+            <span class="mt-3 line-clamp-2 text-sm font-medium text-zinc-800 group-hover:text-brand-700">
+              {{ offer.product.name }}
+            </span>
+            <span class="mt-1 flex flex-wrap items-center gap-2 text-xs">
+              @if (offer.dropPercent7d) {
+                <span class="font-bold text-emerald-600">
+                  -{{ (offer.dropPercent7d * 100).toFixed(1) }}%
+                </span>
+              }
+              @if (offer.lowestInDays > 0) {
+                <span class="rounded-full bg-brand-50 px-2 py-0.5 font-medium text-brand-700">
+                  Menor em {{ offer.lowestInDays }}d
+                </span>
+              }
+            </span>
+          </a>
+          <span class="mt-2 flex items-baseline gap-2">
+            <span class="text-lg font-bold text-zinc-900">{{ formatBRL(offer.currentPrice) }}</span>
+            @if (offer.price7dAgo) {
+              <span class="text-xs text-zinc-400 line-through">{{ formatBRL(offer.price7dAgo) }}</span>
+            }
+          </span>
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+<section class="mt-10">
+  <div class="flex items-baseline justify-between">
+    <h2 class="text-lg font-semibold text-zinc-900">Últimos produtos adicionados</h2>
+    <span class="text-xs text-zinc-400">acima de R$ 500</span>
+  </div>
+
+  @if (newest.isLoading()) {
+    <p class="mt-4 text-sm text-zinc-500">Carregando produtos...</p>
+  } @else if (newest.error()) {
+    <p class="mt-4 text-sm text-red-600">
+      Não foi possível carregar os produtos. Verifique se a API está no ar.
+    </p>
+  } @else if (newest.value()!.items.length === 0) {
+    <p class="card mt-4 p-6 text-center text-sm text-zinc-500">
+      Nenhum produto encontrado.
+    </p>
+  } @else {
+    <div class="card mt-4 divide-y divide-zinc-100">
+      @for (product of newest.value()!.items; track product.id) {
+        <a
+          routerLink="/pecas/{{ product.categorySlug }}/{{ product.id }}"
+          class="group flex items-center gap-3 px-3 py-2.5 transition hover:bg-brand-50/60 sm:px-4"
+        >
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-zinc-50 p-1">
+            @if (product.imageUrl) {
+              <img
+                [src]="product.imageUrl"
+                [alt]="product.name"
+                loading="lazy"
+                class="max-h-full max-w-full object-contain"
+              />
+            }
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="line-clamp-2 text-sm font-medium text-zinc-800 group-hover:text-brand-700">
+              {{ product.name }}
+            </p>
+            <p class="mt-0.5 text-xs text-zinc-400">
+              {{ product.brand }}
+              @if (product.storeCount > 1) {
+                · {{ product.storeCount }} lojas
+              }
+            </p>
+          </div>
+          <div class="shrink-0 text-right">
+            <p class="text-sm font-bold text-zinc-900">{{ formatBRL(product.price) }}</p>
+            <p class="text-xs text-zinc-400 group-hover:text-brand-600">Detalhes →</p>
+          </div>
+        </a>
+      }
+    </div>
+  }
+</section>
+
 <section id="categorias" class="mt-10 scroll-mt-20">
   <div class="flex items-baseline justify-between">
     <h2 class="text-lg font-semibold text-zinc-900">Explorar por categoria</h2>

@@ -1,9 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
-import type { Category, StoreStats } from '../../api';
+import type { Category, OffersResponse, ProductsResponse, StoreStats } from '../../api';
 import { Seo } from '../../seo';
-import { formatNumber } from '../../format';
+import { formatBRL, formatNumber } from '../../format';
 import { CategoryIcon } from '../../components/category-icon/category-icon';
 
 @Component({
@@ -19,7 +19,18 @@ export class Home {
   /** Banner da home: quantidade de itens com valor por loja. */
   protected readonly stores = httpResource<StoreStats[]>(() => '/api/v1/stores');
 
+  /** Ofertas: quedas de preço em produtos acima de R$ 1.000. */
+  protected readonly offers = httpResource<OffersResponse>(
+    () => '/api/v1/offers?period=7d&minPrice=1000&limit=8',
+  );
+
+  /** Últimos produtos adicionados ao catálogo (acima de R$ 500). */
+  protected readonly newest = httpResource<ProductsResponse>(
+    () => '/api/v1/products?sort=newest&minPrice=500&limit=8',
+  );
+
   protected readonly formatNumber = formatNumber;
+  protected readonly formatBRL = formatBRL;
 
   constructor() {
     this.seo.set(
