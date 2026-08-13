@@ -21,6 +21,7 @@ public static class OffersEndpoints
         AppDbContext db,
         [Microsoft.AspNetCore.Mvc.FromQuery] string? period,   // 24h | 7d (default 7d)
         [Microsoft.AspNetCore.Mvc.FromQuery] int? limit,
+        [Microsoft.AspNetCore.Mvc.FromQuery] decimal? minPrice,
         CancellationToken ct)
     {
         var safeLimit = Math.Clamp(limit ?? 30, 1, 100);
@@ -59,6 +60,8 @@ public static class OffersEndpoints
         {
             var current = group.First().Product.CurrentPrice;
             if (current is null)
+                continue;
+            if (minPrice is not null && current < minPrice)
                 continue;
 
             var series = group
