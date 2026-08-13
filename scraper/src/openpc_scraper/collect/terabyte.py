@@ -67,7 +67,7 @@ class TerabyteCollector(BrowserCollector):
         while no_progress < 6:
             before = await page.evaluate(_COUNT_PRODUCTS_JS)
             await more.evaluate("el => el.click()")
-            await asyncio.sleep(2.5)
+            await asyncio.sleep(2.0)
             after = await page.evaluate(_COUNT_PRODUCTS_JS)
             if after > before:
                 return True  # lote carregado — a base extrai e chama de novo

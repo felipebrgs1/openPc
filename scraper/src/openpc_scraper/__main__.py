@@ -128,6 +128,12 @@ async def _main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("run-once", help="coleta imediata dos jobs habilitados")
     p.add_argument("store", nargs="?", help="filtro por loja (kabum|terabyte|pichau)")
     p.add_argument("category", nargs="?", help="filtro por categoria (cpu|gpu|...)")
+    p.add_argument(
+        "--concurrency",
+        type=int,
+        default=int(os.environ.get("SCRAPE_CONCURRENCY", "4")),
+        help="jobs coletados em paralelo (default 4; env SCRAPE_CONCURRENCY; 1 = sequencial)",
+    )
 
     p = sub.add_parser("cleanup-noise", help="remove produtos que não pertencem à categoria")
     p.add_argument("category", nargs="?")
@@ -154,7 +160,8 @@ async def _main(argv: list[str] | None = None) -> int:
         if args.command == "run-once":
             pool = BrowserPool()
             try:
-                await CollectionService(db, pool).run_all_enabled(args.store, args.category)
+                service = CollectionService(db, pool, session_factory=sm)
+                await service.run_all_enabled(args.store, args.category, concurrency=args.concurrency)
             finally:
                 await pool.close()
         elif args.command == "cleanup-noise":

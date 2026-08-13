@@ -75,6 +75,7 @@ class BrowserCollector:
         all_cards: list[RawListing] = []
         page = await self._pool.new_page()
         try:
+            await self._block_heavy_resources(page)
             await page.goto(url, wait_until="domcontentloaded", timeout=45_000)
             await self._wait_cloudflare(page)
 
@@ -99,20 +100,33 @@ class BrowserCollector:
                 distinct.append(l)
         return distinct
 
+    @staticmethod
+    async def _block_heavy_resources(page: Page) -> None:
+        # Fontes/vídeo/favicon não afetam a extração de cards e pesam no
+        # carregamento (imagens ficam — os thumbnails vêm dos atributos img).
+        await page.route(
+            "**/*",
+            lambda route: (
+                route.abort()
+                if route.request.resource_type in {"font", "media"}
+                else route.continue_()
+            ),
+        )
+
     async def _wait_cloudflare(self, page: Page) -> None:
         # aguarda o desafio passar (a página renderiza nav + cards)
         await page.wait_for_function(
             "() => document.querySelectorAll('a[href]').length > 50",
             timeout=45_000,
         )
-        await asyncio.sleep(1.5)
+        await asyncio.sleep(1.0)
 
     @staticmethod
     async def _scroll_to_load(page: Page) -> None:
         for _ in range(12):
             await page.evaluate("window.scrollBy(0, 900)")
-            await asyncio.sleep(0.4)
-        await asyncio.sleep(2.0)
+            await asyncio.sleep(0.25)
+        await asyncio.sleep(1.5)
 
     async def _extract_cards(self, page: Page, category_slug: str) -> list[RawListing]:
         pattern = self.product_href_re.pattern.replace("\\", "\\\\")
