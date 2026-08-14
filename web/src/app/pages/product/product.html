@@ -148,15 +148,25 @@
     }
   </div>
 
-  @if (p.specs.length > 0) {
+  @for (group of specGroups(p.categorySlug, p.specs); track group.title) {
     <div class="card mt-6 overflow-hidden">
       <p class="border-b border-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700">
-        Especificações
+        {{ group.title }}
       </p>
       <dl class="grid grid-cols-1 gap-x-8 px-4 py-2 sm:grid-cols-2">
-        @for (spec of p.specs; track spec.key) {
-          <div class="flex justify-between gap-4 border-b border-zinc-100 py-2 text-sm">
-            <dt class="text-zinc-500">{{ specLabel(spec.key) }}</dt>
+        @for (spec of group.items; track spec.key) {
+          <div class="flex items-baseline justify-between gap-4 border-b border-zinc-100 py-2 text-sm">
+            <dt class="flex items-center gap-1.5 text-zinc-500">
+              {{ specLabel(spec.key) }}
+              @if (spec.source === 'reference') {
+                <span
+                  class="rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500"
+                  title="Valor de referência do fabricante do chip — pode variar na versão de marca"
+                >
+                  referência
+                </span>
+              }
+            </dt>
             <dd class="text-right font-medium text-zinc-800">{{ formatSpecValue(spec.key, spec) }}</dd>
           </div>
         }

@@ -119,9 +119,19 @@ spec_source (scraper|manual|seed), created_at, updated_at`
 compatibilidade. EAV chave-valor tipado, indexado:
 
 ```
-product_id (FK), key, value_text, value_num, value_bool
+product_id (FK), key, value_text, value_num, value_bool,
+source (reference|title|page|manual)
 UNIQUE(product_id, key)
 ```
+
+`source` define a precedência do valor: **manual > page > title > reference**.
+- `reference` — banco curado por chip (`scraper/src/openpc_scraper/data/reference_specs.json`):
+  specs de fábrica do chip (CUDA cores, clocks de referência, barramento...),
+  aplicadas pelo scraper na ingestão para preencher lacunas;
+- `title` — specs extraídas do título da listagem (comportamento antigo);
+- `page` — ficha técnica da página de produto (comando `collect-details`):
+  boost clock da versão de marca, dimensões, conectores... sobrescreve as demais;
+- `manual` — edição humana (reservado).
 
 Chaves por categoria (contrato da engine, ver §4):
 
@@ -136,6 +146,26 @@ Chaves por categoria (contrato da engine, ver §4):
 | case | `supported_form_factors` (JSON array), `max_gpu_length_mm`, `max_cooler_height_mm`, `radiator_support_mm` (JSON), `psu_form_factor` |
 | cooler | `type` (air\|aio), `socket_support` (JSON array), `height_mm` (air), `radiator_mm` (aio), `tdp_rating_w` |
 
+> **Chaves de detalhe** (exibição na página do produto; não usadas pela
+> engine). GPU: `gpu_model`, `gpu_chip`, `gpu_architecture`, `cuda_cores`,
+> `stream_processors`, `compute_units`, `tensor_cores`, `rt_cores`, `xe_cores`,
+> `base_clock_mhz`, `boost_clock_mhz`, `game_clock_mhz`, `memory_type`
+> (gddr6\|gddr7...), `memory_bus_bits`, `memory_clock_gbps`, `bandwidth_gbps`,
+> `process_nm`, `transistors`, `launch`, `directx`, `opengl`, `vulkan`,
+> `video_outputs`, `max_resolution`, `multi_monitor`, `hdcp`, `width_mm`,
+> `height_mm`, `weight`, `reference_model`. CPU: `base_clock_mhz`,
+> `boost_clock_mhz`, `cache_l2_mb`, `cache_l3_mb`, `process_nm`, `launch`,
+> `cooler_included`, `reference_model`. As demais categorias têm chaves
+> análogas (`speed_mhz`, `cas_latency`, `read_mbps`, `tbw`, `noise_dba`...).
+> O mapeamento rótulo→chave vive em `scraper/src/openpc_scraper/normalize/spec_map.py`.
+
+> **Banco de referência por chip.** Cada produto é a versão de marca de um
+> chip (ex: RTX 5070 ASUS TUF OC). As specs de fábrica do chip ficam em
+> `reference_specs.json` (dado curado no repo, revisto a cada geração); a
+> ficha da loja traz os valores da versão de marca (boost maior, dimensões,
+> conectores) e sobrescreve a referência. Na UI, specs com `source=reference`
+> ganham o selo “referência”.
+
 > **Por que EAV e não colunas tipadas por categoria?** Cada categoria tem specs
 > distintas e o schema evolui a cada geração de hardware (ex: LGA1851, DDR5
 > CUDIMM). EAV com chaves documentadas + validação na escrita dá flexibilidade
@@ -144,7 +174,7 @@ Chaves por categoria (contrato da engine, ver §4):
 
 **`listings`** — oferta de um produto em uma loja (a ponte produto↔loja).
 `id, product_id (FK), store_id (FK), store_sku, url, active,
-last_seen_at, created_at`
+last_seen_at, specs_collected_at (coleta da ficha técnica), created_at`
 `UNIQUE(store_id, store_sku)`
 
 **`price_history`** — série temporal de preços (append-only).

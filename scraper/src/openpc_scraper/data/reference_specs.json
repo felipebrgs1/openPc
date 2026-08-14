@@ -1,0 +1,462 @@
+{
+  "$comment": "Banco de specs de REFERÊNCIA por chip (dado curado, revisado manualmente). A referência é o valor de fábrica do chip (NVIDIA/AMD/Intel) — a versão de marca (ASUS, Gigabyte...) costuma ter clocks maiores e vem da ficha técnica da página do produto, que SOBRESCREVE a referência (precedência: page > title > reference). Chaves: id canônico do chip (ver normalize/reference.py). Keys de spec: contrato EAV (docs/specs.md §3.2 + novas chaves de detalhe). Revisar a cada geração nova de hardware.",
+  "gpu": {
+    "rtx5090": { "name": "GeForce RTX 5090", "launch": "jan/2025", "specs": {
+      "gpu_chip": "GB202", "cuda_cores": 21760, "base_clock_mhz": 2017, "boost_clock_mhz": 2407,
+      "memory_gb": 32, "memory_type": "gddr7", "memory_bus_bits": 512, "memory_clock_gbps": 28, "bandwidth_gbps": 1792,
+      "tdp_w": 575, "power_connectors": "1x16pin", "recommended_psu_w": 1000, "interface": "pcie5.0x16",
+      "process_nm": 4, "transistors": "92,2 bilhões", "max_resolution": "7680x4320" } },
+    "rtx5080": { "name": "GeForce RTX 5080", "launch": "jan/2025", "specs": {
+      "gpu_chip": "GB203", "cuda_cores": 10752, "base_clock_mhz": 2295, "boost_clock_mhz": 2617,
+      "memory_gb": 16, "memory_type": "gddr7", "memory_bus_bits": 256, "memory_clock_gbps": 30, "bandwidth_gbps": 960,
+      "tdp_w": 360, "power_connectors": "1x16pin", "recommended_psu_w": 850, "interface": "pcie5.0x16",
+      "process_nm": 4, "transistors": "45,6 bilhões", "max_resolution": "7680x4320" } },
+    "rtx5070ti": { "name": "GeForce RTX 5070 Ti", "launch": "fev/2025", "specs": {
+      "gpu_chip": "GB203", "cuda_cores": 8960, "base_clock_mhz": 2300, "boost_clock_mhz": 2452,
+      "memory_gb": 16, "memory_type": "gddr7", "memory_bus_bits": 256, "memory_clock_gbps": 28, "bandwidth_gbps": 896,
+      "tdp_w": 300, "power_connectors": "1x16pin", "recommended_psu_w": 750, "interface": "pcie5.0x16",
+      "process_nm": 4, "transistors": "45,6 bilhões", "max_resolution": "7680x4320" } },
+    "rtx5070": { "name": "GeForce RTX 5070", "launch": "mar/2025", "specs": {
+      "gpu_chip": "GB205", "cuda_cores": 6144, "base_clock_mhz": 2325, "boost_clock_mhz": 2512,
+      "memory_gb": 12, "memory_type": "gddr7", "memory_bus_bits": 192, "memory_clock_gbps": 28, "bandwidth_gbps": 672,
+      "tdp_w": 250, "power_connectors": "1x16pin", "recommended_psu_w": 650, "interface": "pcie5.0x16",
+      "process_nm": 4, "transistors": "31,1 bilhões", "max_resolution": "7680x4320" } },
+    "rtx5060ti": { "name": "GeForce RTX 5060 Ti", "launch": "abr/2025", "specs": {
+      "gpu_chip": "GB206", "cuda_cores": 4608, "base_clock_mhz": 2407, "boost_clock_mhz": 2572,
+      "memory_type": "gddr7", "memory_bus_bits": 128, "memory_clock_gbps": 28, "bandwidth_gbps": 448,
+      "tdp_w": 180, "power_connectors": "1x16pin", "recommended_psu_w": 600, "interface": "pcie5.0x16",
+      "process_nm": 4, "transistors": "29,2 bilhões", "max_resolution": "7680x4320" } },
+    "rtx5060": { "name": "GeForce RTX 5060", "launch": "mai/2025", "specs": {
+      "gpu_chip": "GB206", "cuda_cores": 3840, "base_clock_mhz": 2235, "boost_clock_mhz": 2497,
+      "memory_gb": 8, "memory_type": "gddr7", "memory_bus_bits": 128, "memory_clock_gbps": 28, "bandwidth_gbps": 448,
+      "tdp_w": 145, "power_connectors": "1x8pin", "recommended_psu_w": 550, "interface": "pcie5.0x16",
+      "process_nm": 4, "max_resolution": "7680x4320" } },
+    "rtx4090": { "name": "GeForce RTX 4090", "launch": "out/2022", "specs": {
+      "gpu_chip": "AD102", "cuda_cores": 16384, "base_clock_mhz": 2235, "boost_clock_mhz": 2520,
+      "memory_gb": 24, "memory_type": "gddr6x", "memory_bus_bits": 384, "memory_clock_gbps": 21, "bandwidth_gbps": 1008,
+      "tdp_w": 450, "power_connectors": "1x16pin", "recommended_psu_w": 850, "interface": "pcie4.0x16",
+      "process_nm": 5, "transistors": "76,3 bilhões", "max_resolution": "7680x4320" } },
+    "rtx4080super": { "name": "GeForce RTX 4080 Super", "launch": "jan/2024", "specs": {
+      "gpu_chip": "AD103", "cuda_cores": 10240, "base_clock_mhz": 2295, "boost_clock_mhz": 2550,
+      "memory_gb": 16, "memory_type": "gddr6x", "memory_bus_bits": 256, "memory_clock_gbps": 23, "bandwidth_gbps": 736,
+      "tdp_w": 320, "power_connectors": "1x16pin", "recommended_psu_w": 750, "interface": "pcie4.0x16",
+      "process_nm": 5, "transistors": "45,9 bilhões", "max_resolution": "7680x4320" } },
+    "rtx4080": { "name": "GeForce RTX 4080", "launch": "nov/2022", "specs": {
+      "gpu_chip": "AD103", "cuda_cores": 9728, "base_clock_mhz": 2205, "boost_clock_mhz": 2505,
+      "memory_gb": 16, "memory_type": "gddr6x", "memory_bus_bits": 256, "memory_clock_gbps": 22.4, "bandwidth_gbps": 717,
+      "tdp_w": 320, "power_connectors": "1x16pin", "recommended_psu_w": 750, "interface": "pcie4.0x16",
+      "process_nm": 5, "transistors": "45,9 bilhões", "max_resolution": "7680x4320" } },
+    "rtx4070tisuper": { "name": "GeForce RTX 4070 Ti Super", "launch": "jan/2024", "specs": {
+      "gpu_chip": "AD103", "cuda_cores": 8448, "base_clock_mhz": 2340, "boost_clock_mhz": 2610,
+      "memory_gb": 16, "memory_type": "gddr6x", "memory_bus_bits": 256, "memory_clock_gbps": 21, "bandwidth_gbps": 672,
+      "tdp_w": 285, "power_connectors": "1x16pin", "recommended_psu_w": 700, "interface": "pcie4.0x16",
+      "process_nm": 5, "transistors": "45,9 bilhões", "max_resolution": "7680x4320" } },
+    "rtx4070super": { "name": "GeForce RTX 4070 Super", "launch": "jan/2024", "specs": {
+      "gpu_chip": "AD104", "cuda_cores": 7168, "base_clock_mhz": 1980, "boost_clock_mhz": 2475,
+      "memory_gb": 12, "memory_type": "gddr6x", "memory_bus_bits": 192, "memory_clock_gbps": 21, "bandwidth_gbps": 504,
+      "tdp_w": 220, "power_connectors": "1x16pin", "recommended_psu_w": 650, "interface": "pcie4.0x16",
+      "process_nm": 5, "transistors": "35,8 bilhões", "max_resolution": "7680x4320" } },
+    "rtx4070": { "name": "GeForce RTX 4070", "launch": "abr/2023", "specs": {
+      "gpu_chip": "AD104", "cuda_cores": 5888, "base_clock_mhz": 1920, "boost_clock_mhz": 2475,
+      "memory_gb": 12, "memory_type": "gddr6x", "memory_bus_bits": 192, "memory_clock_gbps": 21, "bandwidth_gbps": 504,
+      "tdp_w": 200, "power_connectors": "1x16pin", "recommended_psu_w": 650, "interface": "pcie4.0x16",
+      "process_nm": 5, "transistors": "35,8 bilhões", "max_resolution": "7680x4320" } },
+    "rtx4060ti": { "name": "GeForce RTX 4060 Ti", "launch": "mai/2023", "specs": {
+      "gpu_chip": "AD106", "cuda_cores": 4352, "base_clock_mhz": 2310, "boost_clock_mhz": 2535,
+      "memory_type": "gddr6", "memory_bus_bits": 128, "memory_clock_gbps": 18, "bandwidth_gbps": 288,
+      "tdp_w": 160, "power_connectors": "1x8pin", "recommended_psu_w": 550, "interface": "pcie4.0x8",
+      "process_nm": 5, "transistors": "22,9 bilhões", "max_resolution": "7680x4320" } },
+    "rtx4060": { "name": "GeForce RTX 4060", "launch": "jun/2023", "specs": {
+      "gpu_chip": "AD107", "cuda_cores": 3072, "base_clock_mhz": 1830, "boost_clock_mhz": 2460,
+      "memory_gb": 8, "memory_type": "gddr6", "memory_bus_bits": 128, "memory_clock_gbps": 17, "bandwidth_gbps": 272,
+      "tdp_w": 115, "power_connectors": "1x8pin", "recommended_psu_w": 550, "interface": "pcie4.0x8",
+      "process_nm": 5, "transistors": "18,9 bilhões", "max_resolution": "7680x4320" } },
+    "rtx3090": { "name": "GeForce RTX 3090", "launch": "set/2020", "specs": {
+      "gpu_chip": "GA102", "cuda_cores": 10496, "base_clock_mhz": 1395, "boost_clock_mhz": 1695,
+      "memory_gb": 24, "memory_type": "gddr6x", "memory_bus_bits": 384, "memory_clock_gbps": 19.5, "bandwidth_gbps": 936,
+      "tdp_w": 350, "power_connectors": "2x8pin", "recommended_psu_w": 750, "interface": "pcie4.0x16",
+      "process_nm": 8, "transistors": "28,3 bilhões", "max_resolution": "7680x4320" } },
+    "rtx3080ti": { "name": "GeForce RTX 3080 Ti", "launch": "jun/2021", "specs": {
+      "gpu_chip": "GA102", "cuda_cores": 10240, "base_clock_mhz": 1365, "boost_clock_mhz": 1665,
+      "memory_gb": 12, "memory_type": "gddr6x", "memory_bus_bits": 384, "memory_clock_gbps": 19, "bandwidth_gbps": 912,
+      "tdp_w": 350, "power_connectors": "2x8pin", "recommended_psu_w": 750, "interface": "pcie4.0x16",
+      "process_nm": 8, "transistors": "28,3 bilhões", "max_resolution": "7680x4320" } },
+    "rtx3080": { "name": "GeForce RTX 3080", "launch": "set/2020", "specs": {
+      "gpu_chip": "GA102", "cuda_cores": 8704, "base_clock_mhz": 1440, "boost_clock_mhz": 1710,
+      "memory_gb": 10, "memory_type": "gddr6x", "memory_bus_bits": 320, "memory_clock_gbps": 19, "bandwidth_gbps": 760,
+      "tdp_w": 320, "power_connectors": "2x8pin", "recommended_psu_w": 750, "interface": "pcie4.0x16",
+      "process_nm": 8, "transistors": "28,3 bilhões", "max_resolution": "7680x4320" } },
+    "rtx3070ti": { "name": "GeForce RTX 3070 Ti", "launch": "jun/2021", "specs": {
+      "gpu_chip": "GA104", "cuda_cores": 6144, "base_clock_mhz": 1580, "boost_clock_mhz": 1770,
+      "memory_gb": 8, "memory_type": "gddr6x", "memory_bus_bits": 256, "memory_clock_gbps": 19, "bandwidth_gbps": 608,
+      "tdp_w": 290, "power_connectors": "2x8pin", "recommended_psu_w": 750, "interface": "pcie4.0x16",
+      "process_nm": 8, "transistors": "17,4 bilhões", "max_resolution": "7680x4320" } },
+    "rtx3070": { "name": "GeForce RTX 3070", "launch": "out/2020", "specs": {
+      "gpu_chip": "GA104", "cuda_cores": 5888, "base_clock_mhz": 1500, "boost_clock_mhz": 1725,
+      "memory_gb": 8, "memory_type": "gddr6", "memory_bus_bits": 256, "memory_clock_gbps": 14, "bandwidth_gbps": 448,
+      "tdp_w": 220, "power_connectors": "1x12pin", "recommended_psu_w": 650, "interface": "pcie4.0x16",
+      "process_nm": 8, "transistors": "17,4 bilhões", "max_resolution": "7680x4320" } },
+    "rtx3060ti": { "name": "GeForce RTX 3060 Ti", "launch": "dez/2020", "specs": {
+      "gpu_chip": "GA104", "cuda_cores": 4864, "base_clock_mhz": 1410, "boost_clock_mhz": 1665,
+      "memory_gb": 8, "memory_type": "gddr6", "memory_bus_bits": 256, "memory_clock_gbps": 14, "bandwidth_gbps": 448,
+      "tdp_w": 200, "power_connectors": "1x12pin", "recommended_psu_w": 600, "interface": "pcie4.0x16",
+      "process_nm": 8, "transistors": "17,4 bilhões", "max_resolution": "7680x4320" } },
+    "rtx3060": { "name": "GeForce RTX 3060", "launch": "fev/2021", "specs": {
+      "gpu_chip": "GA106", "cuda_cores": 3584, "base_clock_mhz": 1320, "boost_clock_mhz": 1777,
+      "memory_gb": 12, "memory_type": "gddr6", "memory_bus_bits": 192, "memory_clock_gbps": 15, "bandwidth_gbps": 360,
+      "tdp_w": 170, "power_connectors": "1x8pin", "recommended_psu_w": 550, "interface": "pcie4.0x16",
+      "process_nm": 8, "transistors": "13,25 bilhões", "max_resolution": "7680x4320" } },
+    "rtx3050": { "name": "GeForce RTX 3050 (8GB)", "launch": "jan/2022", "specs": {
+      "gpu_chip": "GA107", "cuda_cores": 2560, "base_clock_mhz": 1552, "boost_clock_mhz": 1777,
+      "memory_gb": 8, "memory_type": "gddr6", "memory_bus_bits": 128, "memory_clock_gbps": 14, "bandwidth_gbps": 224,
+      "tdp_w": 130, "power_connectors": "1x8pin", "recommended_psu_w": 550, "interface": "pcie4.0x8",
+      "process_nm": 8, "max_resolution": "7680x4320" } },
+    "rtx3050-6gb": { "name": "GeForce RTX 3050 (6GB)", "launch": "fev/2024", "specs": {
+      "gpu_chip": "GA107", "cuda_cores": 2304, "base_clock_mhz": 1042, "boost_clock_mhz": 1470,
+      "memory_gb": 6, "memory_type": "gddr6", "memory_bus_bits": 96, "memory_clock_gbps": 14, "bandwidth_gbps": 168,
+      "tdp_w": 70, "power_connectors": "nenhum (slot)", "recommended_psu_w": 350, "interface": "pcie4.0x8",
+      "process_nm": 8, "max_resolution": "7680x4320" } },
+    "gtx1660super": { "name": "GeForce GTX 1660 Super", "launch": "out/2019", "specs": {
+      "gpu_chip": "TU116", "cuda_cores": 1408, "base_clock_mhz": 1530, "boost_clock_mhz": 1785,
+      "memory_gb": 6, "memory_type": "gddr6", "memory_bus_bits": 192, "memory_clock_gbps": 14, "bandwidth_gbps": 336,
+      "tdp_w": 125, "power_connectors": "1x8pin", "recommended_psu_w": 450, "interface": "pcie3.0x16",
+      "process_nm": 12, "transistors": "6,6 bilhões", "max_resolution": "7680x4320" } },
+    "gtx1660": { "name": "GeForce GTX 1660", "launch": "mar/2019", "specs": {
+      "gpu_chip": "TU116", "cuda_cores": 1408, "base_clock_mhz": 1530, "boost_clock_mhz": 1785,
+      "memory_gb": 6, "memory_type": "gddr5", "memory_bus_bits": 192, "memory_clock_gbps": 8, "bandwidth_gbps": 192,
+      "tdp_w": 120, "power_connectors": "1x8pin", "recommended_psu_w": 450, "interface": "pcie3.0x16",
+      "process_nm": 12, "transistors": "6,6 bilhões", "max_resolution": "7680x4320" } },
+    "gtx1650super": { "name": "GeForce GTX 1650 Super", "launch": "nov/2019", "specs": {
+      "gpu_chip": "TU116", "cuda_cores": 1280, "base_clock_mhz": 1530, "boost_clock_mhz": 1725,
+      "memory_gb": 4, "memory_type": "gddr6", "memory_bus_bits": 128, "memory_clock_gbps": 12, "bandwidth_gbps": 192,
+      "tdp_w": 100, "power_connectors": "1x6pin", "recommended_psu_w": 350, "interface": "pcie3.0x16",
+      "process_nm": 12, "max_resolution": "7680x4320" } },
+    "gtx1650": { "name": "GeForce GTX 1650", "launch": "abr/2019", "specs": {
+      "gpu_chip": "TU117", "cuda_cores": 896, "base_clock_mhz": 1485, "boost_clock_mhz": 1665,
+      "memory_gb": 4, "memory_type": "gddr5", "memory_bus_bits": 128, "memory_clock_gbps": 8, "bandwidth_gbps": 128,
+      "tdp_w": 75, "power_connectors": "nenhum (slot)", "recommended_psu_w": 300, "interface": "pcie3.0x16",
+      "process_nm": 12, "max_resolution": "7680x4320" } },
+    "gtx1630": { "name": "GeForce GTX 1630", "launch": "jun/2022", "specs": {
+      "gpu_chip": "TU117", "cuda_cores": 512, "base_clock_mhz": 1740, "boost_clock_mhz": 1785,
+      "memory_gb": 4, "memory_type": "gddr6", "memory_bus_bits": 64, "memory_clock_gbps": 12, "bandwidth_gbps": 96,
+      "tdp_w": 75, "power_connectors": "nenhum (slot)", "recommended_psu_w": 300, "interface": "pcie3.0x8",
+      "process_nm": 12, "max_resolution": "7680x4320" } },
+    "rx9070xt": { "name": "Radeon RX 9070 XT", "launch": "mar/2025", "specs": {
+      "gpu_chip": "Navi 48", "stream_processors": 4096, "compute_units": 64, "base_clock_mhz": 2400, "boost_clock_mhz": 2970,
+      "memory_gb": 16, "memory_type": "gddr6", "memory_bus_bits": 256, "memory_clock_gbps": 20, "bandwidth_gbps": 644.6,
+      "tdp_w": 304, "power_connectors": "2x8pin", "recommended_psu_w": 750, "interface": "pcie5.0x16",
+      "process_nm": 4, "transistors": "53,9 bilhões", "max_resolution": "7680x4320" } },
+    "rx9070": { "name": "Radeon RX 9070", "launch": "mar/2025", "specs": {
+      "gpu_chip": "Navi 48", "stream_processors": 3584, "compute_units": 56, "base_clock_mhz": 2070, "boost_clock_mhz": 2540,
+      "memory_gb": 16, "memory_type": "gddr6", "memory_bus_bits": 256, "memory_clock_gbps": 20, "bandwidth_gbps": 644.6,
+      "tdp_w": 220, "power_connectors": "2x8pin", "recommended_psu_w": 650, "interface": "pcie5.0x16",
+      "process_nm": 4, "transistors": "53,9 bilhões", "max_resolution": "7680x4320" } },
+    "rx9060xt": { "name": "Radeon RX 9060 XT", "launch": "abr/2025", "specs": {
+      "gpu_chip": "Navi 44", "stream_processors": 2048, "compute_units": 32, "base_clock_mhz": 2620, "boost_clock_mhz": 2970,
+      "memory_gb": 16, "memory_type": "gddr6", "memory_bus_bits": 128, "memory_clock_gbps": 20, "bandwidth_gbps": 320,
+      "tdp_w": 150, "power_connectors": "1x8pin", "recommended_psu_w": 500, "interface": "pcie5.0x8",
+      "process_nm": 4, "max_resolution": "7680x4320" } },
+    "rx9060": { "name": "Radeon RX 9060", "launch": "abr/2025", "specs": {
+      "gpu_chip": "Navi 44", "stream_processors": 2048, "compute_units": 32, "base_clock_mhz": 2370, "boost_clock_mhz": 2720,
+      "memory_gb": 16, "memory_type": "gddr6", "memory_bus_bits": 128, "memory_clock_gbps": 20, "bandwidth_gbps": 320,
+      "tdp_w": 150, "power_connectors": "1x8pin", "recommended_psu_w": 500, "interface": "pcie5.0x8",
+      "process_nm": 4, "max_resolution": "7680x4320" } },
+    "rx7900xtx": { "name": "Radeon RX 7900 XTX", "launch": "dez/2022", "specs": {
+      "gpu_chip": "Navi 31", "stream_processors": 6144, "compute_units": 96, "base_clock_mhz": 1855, "boost_clock_mhz": 2500,
+      "memory_gb": 24, "memory_type": "gddr6", "memory_bus_bits": 384, "memory_clock_gbps": 20, "bandwidth_gbps": 960,
+      "tdp_w": 355, "power_connectors": "2x8pin", "recommended_psu_w": 800, "interface": "pcie4.0x16",
+      "process_nm": 5, "transistors": "57,7 bilhões", "max_resolution": "7680x4320" } },
+    "rx7900xt": { "name": "Radeon RX 7900 XT", "launch": "dez/2022", "specs": {
+      "gpu_chip": "Navi 31", "stream_processors": 5376, "compute_units": 84, "base_clock_mhz": 1500, "boost_clock_mhz": 2400,
+      "memory_gb": 20, "memory_type": "gddr6", "memory_bus_bits": 320, "memory_clock_gbps": 20, "bandwidth_gbps": 800,
+      "tdp_w": 315, "power_connectors": "2x8pin", "recommended_psu_w": 750, "interface": "pcie4.0x16",
+      "process_nm": 5, "transistors": "57,7 bilhões", "max_resolution": "7680x4320" } },
+    "rx7900gre": { "name": "Radeon RX 7900 GRE", "launch": "jul/2023", "specs": {
+      "gpu_chip": "Navi 31", "stream_processors": 5120, "compute_units": 80, "base_clock_mhz": 1270, "boost_clock_mhz": 2245,
+      "memory_gb": 16, "memory_type": "gddr6", "memory_bus_bits": 256, "memory_clock_gbps": 18, "bandwidth_gbps": 576,
+      "tdp_w": 260, "power_connectors": "2x8pin", "recommended_psu_w": 700, "interface": "pcie4.0x16",
+      "process_nm": 5, "transistors": "57,7 bilhões", "max_resolution": "7680x4320" } },
+    "rx7800xt": { "name": "Radeon RX 7800 XT", "launch": "set/2023", "specs": {
+      "gpu_chip": "Navi 32", "stream_processors": 3840, "compute_units": 60, "base_clock_mhz": 1295, "boost_clock_mhz": 2430,
+      "memory_gb": 16, "memory_type": "gddr6", "memory_bus_bits": 256, "memory_clock_gbps": 19.5, "bandwidth_gbps": 624,
+      "tdp_w": 263, "power_connectors": "2x8pin", "recommended_psu_w": 700, "interface": "pcie4.0x16",
+      "process_nm": 5, "transistors": "28,1 bilhões", "max_resolution": "7680x4320" } },
+    "rx7700xt": { "name": "Radeon RX 7700 XT", "launch": "set/2023", "specs": {
+      "gpu_chip": "Navi 32", "stream_processors": 3456, "compute_units": 54, "base_clock_mhz": 1700, "boost_clock_mhz": 2544,
+      "memory_gb": 12, "memory_type": "gddr6", "memory_bus_bits": 192, "memory_clock_gbps": 18, "bandwidth_gbps": 432,
+      "tdp_w": 245, "power_connectors": "2x8pin", "recommended_psu_w": 700, "interface": "pcie4.0x16",
+      "process_nm": 5, "transistors": "28,1 bilhões", "max_resolution": "7680x4320" } },
+    "rx7600xt": { "name": "Radeon RX 7600 XT", "launch": "jan/2024", "specs": {
+      "gpu_chip": "Navi 33", "stream_processors": 2048, "compute_units": 32, "base_clock_mhz": 1720, "boost_clock_mhz": 2755,
+      "memory_gb": 16, "memory_type": "gddr6", "memory_bus_bits": 128, "memory_clock_gbps": 18, "bandwidth_gbps": 288,
+      "tdp_w": 190, "power_connectors": "1x8pin", "recommended_psu_w": 600, "interface": "pcie4.0x8",
+      "process_nm": 6, "transistors": "13,3 bilhões", "max_resolution": "7680x4320" } },
+    "rx7600": { "name": "Radeon RX 7600", "launch": "mai/2023", "specs": {
+      "gpu_chip": "Navi 33", "stream_processors": 2048, "compute_units": 32, "base_clock_mhz": 1720, "boost_clock_mhz": 2655,
+      "memory_gb": 8, "memory_type": "gddr6", "memory_bus_bits": 128, "memory_clock_gbps": 18, "bandwidth_gbps": 288,
+      "tdp_w": 165, "power_connectors": "1x8pin", "recommended_psu_w": 550, "interface": "pcie4.0x8",
+      "process_nm": 6, "transistors": "13,3 bilhões", "max_resolution": "7680x4320" } },
+    "rx6900xt": { "name": "Radeon RX 6900 XT", "launch": "dez/2020", "specs": {
+      "gpu_chip": "Navi 21", "stream_processors": 5120, "compute_units": 80, "base_clock_mhz": 1825, "boost_clock_mhz": 2250,
+      "memory_gb": 16, "memory_type": "gddr6", "memory_bus_bits": 256, "memory_clock_gbps": 16, "bandwidth_gbps": 512,
+      "tdp_w": 300, "power_connectors": "2x8pin", "recommended_psu_w": 700, "interface": "pcie4.0x16",
+      "process_nm": 7, "transistors": "26,8 bilhões", "max_resolution": "7680x4320" } },
+    "rx6800xt": { "name": "Radeon RX 6800 XT", "launch": "nov/2020", "specs": {
+      "gpu_chip": "Navi 21", "stream_processors": 4608, "compute_units": 72, "base_clock_mhz": 1825, "boost_clock_mhz": 2250,
+      "memory_gb": 16, "memory_type": "gddr6", "memory_bus_bits": 256, "memory_clock_gbps": 16, "bandwidth_gbps": 512,
+      "tdp_w": 300, "power_connectors": "2x8pin", "recommended_psu_w": 700, "interface": "pcie4.0x16",
+      "process_nm": 7, "transistors": "26,8 bilhões", "max_resolution": "7680x4320" } },
+    "rx6800": { "name": "Radeon RX 6800", "launch": "nov/2020", "specs": {
+      "gpu_chip": "Navi 21", "stream_processors": 3840, "compute_units": 60, "base_clock_mhz": 1700, "boost_clock_mhz": 2105,
+      "memory_gb": 16, "memory_type": "gddr6", "memory_bus_bits": 256, "memory_clock_gbps": 16, "bandwidth_gbps": 512,
+      "tdp_w": 250, "power_connectors": "2x8pin", "recommended_psu_w": 650, "interface": "pcie4.0x16",
+      "process_nm": 7, "transistors": "26,8 bilhões", "max_resolution": "7680x4320" } },
+    "rx6750xt": { "name": "Radeon RX 6750 XT", "launch": "mai/2022", "specs": {
+      "gpu_chip": "Navi 22", "stream_processors": 2560, "compute_units": 40, "base_clock_mhz": 2150, "boost_clock_mhz": 2600,
+      "memory_gb": 12, "memory_type": "gddr6", "memory_bus_bits": 192, "memory_clock_gbps": 18, "bandwidth_gbps": 432,
+      "tdp_w": 250, "power_connectors": "2x8pin", "recommended_psu_w": 650, "interface": "pcie4.0x16",
+      "process_nm": 7, "transistors": "17,2 bilhões", "max_resolution": "7680x4320" } },
+    "rx6700xt": { "name": "Radeon RX 6700 XT", "launch": "mar/2021", "specs": {
+      "gpu_chip": "Navi 22", "stream_processors": 2560, "compute_units": 40, "base_clock_mhz": 2321, "boost_clock_mhz": 2581,
+      "memory_gb": 12, "memory_type": "gddr6", "memory_bus_bits": 192, "memory_clock_gbps": 16, "bandwidth_gbps": 384,
+      "tdp_w": 230, "power_connectors": "2x8pin", "recommended_psu_w": 650, "interface": "pcie4.0x16",
+      "process_nm": 7, "transistors": "17,2 bilhões", "max_resolution": "7680x4320" } },
+    "rx6650xt": { "name": "Radeon RX 6650 XT", "launch": "mai/2022", "specs": {
+      "gpu_chip": "Navi 23", "stream_processors": 2048, "compute_units": 32, "base_clock_mhz": 2055, "boost_clock_mhz": 2635,
+      "memory_gb": 8, "memory_type": "gddr6", "memory_bus_bits": 128, "memory_clock_gbps": 17.5, "bandwidth_gbps": 280,
+      "tdp_w": 180, "power_connectors": "1x8pin", "recommended_psu_w": 500, "interface": "pcie4.0x8",
+      "process_nm": 7, "transistors": "11,06 bilhões", "max_resolution": "7680x4320" } },
+    "rx6600xt": { "name": "Radeon RX 6600 XT", "launch": "ago/2021", "specs": {
+      "gpu_chip": "Navi 23", "stream_processors": 2048, "compute_units": 32, "base_clock_mhz": 1968, "boost_clock_mhz": 2589,
+      "memory_gb": 8, "memory_type": "gddr6", "memory_bus_bits": 128, "memory_clock_gbps": 16, "bandwidth_gbps": 256,
+      "tdp_w": 160, "power_connectors": "1x8pin", "recommended_psu_w": 500, "interface": "pcie4.0x8",
+      "process_nm": 7, "transistors": "11,06 bilhões", "max_resolution": "7680x4320" } },
+    "rx6600": { "name": "Radeon RX 6600", "launch": "out/2021", "specs": {
+      "gpu_chip": "Navi 23", "stream_processors": 1792, "compute_units": 28, "base_clock_mhz": 1626, "boost_clock_mhz": 2491,
+      "memory_gb": 8, "memory_type": "gddr6", "memory_bus_bits": 128, "memory_clock_gbps": 14, "bandwidth_gbps": 224,
+      "tdp_w": 132, "power_connectors": "1x8pin", "recommended_psu_w": 450, "interface": "pcie4.0x8",
+      "process_nm": 7, "transistors": "11,06 bilhões", "max_resolution": "7680x4320" } },
+    "arcb580": { "name": "Intel Arc B580", "launch": "dez/2024", "specs": {
+      "gpu_chip": "BMG-G21", "xe_cores": 20, "base_clock_mhz": 2670, "boost_clock_mhz": 2670,
+      "memory_gb": 12, "memory_type": "gddr6", "memory_bus_bits": 192, "memory_clock_gbps": 19, "bandwidth_gbps": 456,
+      "tdp_w": 190, "power_connectors": "1x8pin", "recommended_psu_w": 600, "interface": "pcie4.0x8",
+      "process_nm": 5, "max_resolution": "7680x4320" } },
+    "arcb570": { "name": "Intel Arc B570", "launch": "jan/2025", "specs": {
+      "gpu_chip": "BMG-G21", "xe_cores": 18, "base_clock_mhz": 2500, "boost_clock_mhz": 2500,
+      "memory_gb": 10, "memory_type": "gddr6", "memory_bus_bits": 160, "memory_clock_gbps": 19, "bandwidth_gbps": 380,
+      "tdp_w": 150, "power_connectors": "1x8pin", "recommended_psu_w": 600, "interface": "pcie4.0x8",
+      "process_nm": 5, "max_resolution": "7680x4320" } },
+    "arca750": { "name": "Intel Arc A750", "launch": "out/2022", "specs": {
+      "gpu_chip": "ACM-G10", "xe_cores": 28, "base_clock_mhz": 2050, "boost_clock_mhz": 2400,
+      "memory_gb": 8, "memory_type": "gddr6", "memory_bus_bits": 256, "memory_clock_gbps": 16, "bandwidth_gbps": 512,
+      "tdp_w": 225, "power_connectors": "2x8pin", "recommended_psu_w": 650, "interface": "pcie4.0x16",
+      "process_nm": 6, "transistors": "21,7 bilhões", "max_resolution": "7680x4320" } },
+    "arca580": { "name": "Intel Arc A580", "launch": "out/2023", "specs": {
+      "gpu_chip": "ACM-G10", "xe_cores": 24, "base_clock_mhz": 1700, "boost_clock_mhz": 1700,
+      "memory_gb": 8, "memory_type": "gddr6", "memory_bus_bits": 256, "memory_clock_gbps": 16, "bandwidth_gbps": 512,
+      "tdp_w": 185, "power_connectors": "2x8pin", "recommended_psu_w": 600, "interface": "pcie4.0x16",
+      "process_nm": 6, "transistors": "21,7 bilhões", "max_resolution": "7680x4320" } }
+  },
+  "cpu": {
+    "r99950x": { "name": "Ryzen 9 9950X", "launch": "ago/2024", "specs": {
+      "cores": 16, "threads": 32, "base_clock_mhz": 4300, "boost_clock_mhz": 5700,
+      "cache_l2_mb": 16, "cache_l3_mb": 64, "tdp_w": 170, "socket": "am5", "process_nm": 4,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r99900x": { "name": "Ryzen 9 9900X", "launch": "ago/2024", "specs": {
+      "cores": 12, "threads": 24, "base_clock_mhz": 4400, "boost_clock_mhz": 5600,
+      "cache_l2_mb": 12, "cache_l3_mb": 64, "tdp_w": 120, "socket": "am5", "process_nm": 4,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r79800x3d": { "name": "Ryzen 7 9800X3D", "launch": "nov/2024", "specs": {
+      "cores": 8, "threads": 16, "base_clock_mhz": 4700, "boost_clock_mhz": 5200,
+      "cache_l2_mb": 8, "cache_l3_mb": 96, "tdp_w": 120, "socket": "am5", "process_nm": 4,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r79700x": { "name": "Ryzen 7 9700X", "launch": "ago/2024", "specs": {
+      "cores": 8, "threads": 16, "base_clock_mhz": 3800, "boost_clock_mhz": 5500,
+      "cache_l2_mb": 8, "cache_l3_mb": 32, "tdp_w": 65, "socket": "am5", "process_nm": 4,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r59600x": { "name": "Ryzen 5 9600X", "launch": "ago/2024", "specs": {
+      "cores": 6, "threads": 12, "base_clock_mhz": 3900, "boost_clock_mhz": 5400,
+      "cache_l2_mb": 6, "cache_l3_mb": 32, "tdp_w": 65, "socket": "am5", "process_nm": 4,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r59600": { "name": "Ryzen 5 9600", "launch": "mai/2025", "specs": {
+      "cores": 6, "threads": 12, "base_clock_mhz": 3800, "boost_clock_mhz": 5200,
+      "cache_l2_mb": 6, "cache_l3_mb": 32, "tdp_w": 65, "socket": "am5", "process_nm": 4,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r97950x": { "name": "Ryzen 9 7950X", "launch": "set/2022", "specs": {
+      "cores": 16, "threads": 32, "base_clock_mhz": 4500, "boost_clock_mhz": 5700,
+      "cache_l2_mb": 16, "cache_l3_mb": 64, "tdp_w": 170, "socket": "am5", "process_nm": 5,
+      "memory_type": "ddr5", "max_memory_speed": 5200, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r97900x": { "name": "Ryzen 9 7900X", "launch": "set/2022", "specs": {
+      "cores": 12, "threads": 24, "base_clock_mhz": 4700, "boost_clock_mhz": 5600,
+      "cache_l2_mb": 12, "cache_l3_mb": 64, "tdp_w": 170, "socket": "am5", "process_nm": 5,
+      "memory_type": "ddr5", "max_memory_speed": 5200, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r97900": { "name": "Ryzen 9 7900", "launch": "jan/2023", "specs": {
+      "cores": 12, "threads": 24, "base_clock_mhz": 3700, "boost_clock_mhz": 5400,
+      "cache_l2_mb": 12, "cache_l3_mb": 64, "tdp_w": 65, "socket": "am5", "process_nm": 5,
+      "memory_type": "ddr5", "max_memory_speed": 5200, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r77800x3d": { "name": "Ryzen 7 7800X3D", "launch": "abr/2023", "specs": {
+      "cores": 8, "threads": 16, "base_clock_mhz": 4200, "boost_clock_mhz": 5000,
+      "cache_l2_mb": 8, "cache_l3_mb": 96, "tdp_w": 120, "socket": "am5", "process_nm": 5,
+      "memory_type": "ddr5", "max_memory_speed": 5200, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r77700x": { "name": "Ryzen 7 7700X", "launch": "set/2022", "specs": {
+      "cores": 8, "threads": 16, "base_clock_mhz": 4500, "boost_clock_mhz": 5400,
+      "cache_l2_mb": 8, "cache_l3_mb": 32, "tdp_w": 105, "socket": "am5", "process_nm": 5,
+      "memory_type": "ddr5", "max_memory_speed": 5200, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r77700": { "name": "Ryzen 7 7700", "launch": "jan/2023", "specs": {
+      "cores": 8, "threads": 16, "base_clock_mhz": 3800, "boost_clock_mhz": 5300,
+      "cache_l2_mb": 8, "cache_l3_mb": 32, "tdp_w": 65, "socket": "am5", "process_nm": 5,
+      "memory_type": "ddr5", "max_memory_speed": 5200, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r57600x": { "name": "Ryzen 5 7600X", "launch": "set/2022", "specs": {
+      "cores": 6, "threads": 12, "base_clock_mhz": 4700, "boost_clock_mhz": 5300,
+      "cache_l2_mb": 6, "cache_l3_mb": 32, "tdp_w": 105, "socket": "am5", "process_nm": 5,
+      "memory_type": "ddr5", "max_memory_speed": 5200, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r57600": { "name": "Ryzen 5 7600", "launch": "jan/2023", "specs": {
+      "cores": 6, "threads": 12, "base_clock_mhz": 3800, "boost_clock_mhz": 5100,
+      "cache_l2_mb": 6, "cache_l3_mb": 32, "tdp_w": 65, "socket": "am5", "process_nm": 5,
+      "memory_type": "ddr5", "max_memory_speed": 5200, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r57500f": { "name": "Ryzen 5 7500F", "launch": "jul/2023", "specs": {
+      "cores": 6, "threads": 12, "base_clock_mhz": 3700, "boost_clock_mhz": 5000,
+      "cache_l2_mb": 6, "cache_l3_mb": 32, "tdp_w": 65, "socket": "am5", "process_nm": 5,
+      "memory_type": "ddr5", "max_memory_speed": 5200, "pcie_lanes": 24, "has_igpu": "false" } },
+    "r95950x": { "name": "Ryzen 9 5950X", "launch": "nov/2020", "specs": {
+      "cores": 16, "threads": 32, "base_clock_mhz": 3400, "boost_clock_mhz": 4900,
+      "cache_l2_mb": 8, "cache_l3_mb": 64, "tdp_w": 105, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24 } },
+    "r95900x": { "name": "Ryzen 9 5900X", "launch": "nov/2020", "specs": {
+      "cores": 12, "threads": 24, "base_clock_mhz": 3700, "boost_clock_mhz": 4800,
+      "cache_l2_mb": 6, "cache_l3_mb": 64, "tdp_w": 105, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24 } },
+    "r75800x3d": { "name": "Ryzen 7 5800X3D", "launch": "abr/2022", "specs": {
+      "cores": 8, "threads": 16, "base_clock_mhz": 3400, "boost_clock_mhz": 4500,
+      "cache_l2_mb": 4, "cache_l3_mb": 96, "tdp_w": 105, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24 } },
+    "r75800x": { "name": "Ryzen 7 5800X", "launch": "nov/2020", "specs": {
+      "cores": 8, "threads": 16, "base_clock_mhz": 3800, "boost_clock_mhz": 4700,
+      "cache_l2_mb": 4, "cache_l3_mb": 32, "tdp_w": 105, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24 } },
+    "r75700x3d": { "name": "Ryzen 7 5700X3D", "launch": "jan/2024", "specs": {
+      "cores": 8, "threads": 16, "base_clock_mhz": 3000, "boost_clock_mhz": 4100,
+      "cache_l2_mb": 4, "cache_l3_mb": 96, "tdp_w": 105, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24 } },
+    "r75700x": { "name": "Ryzen 7 5700X", "launch": "abr/2022", "specs": {
+      "cores": 8, "threads": 16, "base_clock_mhz": 3400, "boost_clock_mhz": 4600,
+      "cache_l2_mb": 4, "cache_l3_mb": 32, "tdp_w": 65, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24 } },
+    "r75700g": { "name": "Ryzen 7 5700G", "launch": "abr/2021", "specs": {
+      "cores": 8, "threads": 16, "base_clock_mhz": 3800, "boost_clock_mhz": 4600,
+      "cache_l2_mb": 4, "cache_l3_mb": 16, "tdp_w": 65, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r75700": { "name": "Ryzen 7 5700", "launch": "abr/2022", "specs": {
+      "cores": 8, "threads": 16, "base_clock_mhz": 3700, "boost_clock_mhz": 4600,
+      "cache_l2_mb": 4, "cache_l3_mb": 16, "tdp_w": 65, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24 } },
+    "r55600x": { "name": "Ryzen 5 5600X", "launch": "nov/2020", "specs": {
+      "cores": 6, "threads": 12, "base_clock_mhz": 3700, "boost_clock_mhz": 4600,
+      "cache_l2_mb": 3, "cache_l3_mb": 32, "tdp_w": 65, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24 } },
+    "r55600": { "name": "Ryzen 5 5600", "launch": "abr/2022", "specs": {
+      "cores": 6, "threads": 12, "base_clock_mhz": 3500, "boost_clock_mhz": 4400,
+      "cache_l2_mb": 3, "cache_l3_mb": 32, "tdp_w": 65, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24 } },
+    "r55600g": { "name": "Ryzen 5 5600G", "launch": "abr/2021", "specs": {
+      "cores": 6, "threads": 12, "base_clock_mhz": 3900, "boost_clock_mhz": 4400,
+      "cache_l2_mb": 3, "cache_l3_mb": 16, "tdp_w": 65, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r55600gt": { "name": "Ryzen 5 5600GT", "launch": "jan/2024", "specs": {
+      "cores": 6, "threads": 12, "base_clock_mhz": 3600, "boost_clock_mhz": 4600,
+      "cache_l2_mb": 3, "cache_l3_mb": 16, "tdp_w": 65, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24, "has_igpu": "true" } },
+    "r55500": { "name": "Ryzen 5 5500", "launch": "abr/2022", "specs": {
+      "cores": 6, "threads": 12, "base_clock_mhz": 3600, "boost_clock_mhz": 4200,
+      "cache_l2_mb": 3, "cache_l3_mb": 16, "tdp_w": 65, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "pcie_lanes": 24 } },
+    "r54600g": { "name": "Ryzen 5 4600G", "launch": "jul/2020", "specs": {
+      "cores": 6, "threads": 12, "base_clock_mhz": 3700, "boost_clock_mhz": 4200,
+      "cache_l2_mb": 3, "cache_l3_mb": 8, "tdp_w": 65, "socket": "am4", "process_nm": 7,
+      "memory_type": "ddr4", "max_memory_speed": 3200, "has_igpu": "true" } },
+    "i914900k": { "name": "Core i9-14900K", "launch": "out/2023", "specs": {
+      "cores": 24, "threads": 32, "base_clock_mhz": 3200, "boost_clock_mhz": 6000,
+      "cache_l2_mb": 32, "cache_l3_mb": 36, "tdp_w": 125, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 20, "has_igpu": "true" } },
+    "i914900f": { "name": "Core i9-14900F", "launch": "jan/2024", "specs": {
+      "cores": 24, "threads": 32, "base_clock_mhz": 2000, "boost_clock_mhz": 5800,
+      "cache_l2_mb": 32, "cache_l3_mb": 36, "tdp_w": 65, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 20, "has_igpu": "false" } },
+    "i714700k": { "name": "Core i7-14700K", "launch": "out/2023", "specs": {
+      "cores": 20, "threads": 28, "base_clock_mhz": 3400, "boost_clock_mhz": 5600,
+      "cache_l2_mb": 28, "cache_l3_mb": 33, "tdp_w": 125, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 20, "has_igpu": "true" } },
+    "i714700f": { "name": "Core i7-14700F", "launch": "jan/2024", "specs": {
+      "cores": 20, "threads": 28, "base_clock_mhz": 2100, "boost_clock_mhz": 5400,
+      "cache_l2_mb": 28, "cache_l3_mb": 33, "tdp_w": 65, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 20, "has_igpu": "false" } },
+    "i514600k": { "name": "Core i5-14600K", "launch": "out/2023", "specs": {
+      "cores": 14, "threads": 20, "base_clock_mhz": 3500, "boost_clock_mhz": 5300,
+      "cache_l2_mb": 20, "cache_l3_mb": 24, "tdp_w": 125, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 20, "has_igpu": "true" } },
+    "i514400f": { "name": "Core i5-14400F", "launch": "jan/2024", "specs": {
+      "cores": 10, "threads": 16, "base_clock_mhz": 2500, "boost_clock_mhz": 4700,
+      "cache_l2_mb": 9.5, "cache_l3_mb": 20, "tdp_w": 65, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 4800, "pcie_lanes": 20, "has_igpu": "false" } },
+    "i314100f": { "name": "Core i3-14100F", "launch": "jan/2024", "specs": {
+      "cores": 4, "threads": 8, "base_clock_mhz": 3500, "boost_clock_mhz": 4700,
+      "cache_l2_mb": 5, "cache_l3_mb": 12, "tdp_w": 58, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 4800, "pcie_lanes": 20, "has_igpu": "false" } },
+    "i913900k": { "name": "Core i9-13900K", "launch": "out/2022", "specs": {
+      "cores": 24, "threads": 32, "base_clock_mhz": 3000, "boost_clock_mhz": 5800,
+      "cache_l2_mb": 32, "cache_l3_mb": 36, "tdp_w": 125, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 20, "has_igpu": "true" } },
+    "i713700k": { "name": "Core i7-13700K", "launch": "out/2022", "specs": {
+      "cores": 16, "threads": 24, "base_clock_mhz": 3400, "boost_clock_mhz": 5400,
+      "cache_l2_mb": 24, "cache_l3_mb": 30, "tdp_w": 125, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 20, "has_igpu": "true" } },
+    "i513600k": { "name": "Core i5-13600K", "launch": "out/2022", "specs": {
+      "cores": 14, "threads": 20, "base_clock_mhz": 3500, "boost_clock_mhz": 5100,
+      "cache_l2_mb": 20, "cache_l3_mb": 24, "tdp_w": 125, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 5600, "pcie_lanes": 20, "has_igpu": "true" } },
+    "i513400f": { "name": "Core i5-13400F", "launch": "jan/2023", "specs": {
+      "cores": 10, "threads": 16, "base_clock_mhz": 2500, "boost_clock_mhz": 4600,
+      "cache_l2_mb": 9.5, "cache_l3_mb": 20, "tdp_w": 65, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 4800, "pcie_lanes": 20, "has_igpu": "false" } },
+    "i313100f": { "name": "Core i3-13100F", "launch": "jan/2023", "specs": {
+      "cores": 4, "threads": 8, "base_clock_mhz": 3400, "boost_clock_mhz": 4500,
+      "cache_l2_mb": 5, "cache_l3_mb": 12, "tdp_w": 58, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 4800, "pcie_lanes": 20, "has_igpu": "false" } },
+    "i912900k": { "name": "Core i9-12900K", "launch": "nov/2021", "specs": {
+      "cores": 16, "threads": 24, "base_clock_mhz": 3200, "boost_clock_mhz": 5200,
+      "cache_l2_mb": 14, "cache_l3_mb": 30, "tdp_w": 125, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 4800, "pcie_lanes": 20, "has_igpu": "true" } },
+    "i712700k": { "name": "Core i7-12700K", "launch": "nov/2021", "specs": {
+      "cores": 12, "threads": 20, "base_clock_mhz": 3600, "boost_clock_mhz": 5000,
+      "cache_l2_mb": 12, "cache_l3_mb": 25, "tdp_w": 125, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 4800, "pcie_lanes": 20, "has_igpu": "true" } },
+    "i512600k": { "name": "Core i5-12600K", "launch": "nov/2021", "specs": {
+      "cores": 10, "threads": 16, "base_clock_mhz": 3700, "boost_clock_mhz": 4900,
+      "cache_l2_mb": 9.5, "cache_l3_mb": 20, "tdp_w": 125, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 4800, "pcie_lanes": 20, "has_igpu": "true" } },
+    "i512400f": { "name": "Core i5-12400F", "launch": "jan/2022", "specs": {
+      "cores": 6, "threads": 12, "base_clock_mhz": 2500, "boost_clock_mhz": 4400,
+      "cache_l2_mb": 7.5, "cache_l3_mb": 18, "tdp_w": 65, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 4800, "pcie_lanes": 20, "has_igpu": "false" } },
+    "i312100f": { "name": "Core i3-12100F", "launch": "jan/2022", "specs": {
+      "cores": 4, "threads": 8, "base_clock_mhz": 3300, "boost_clock_mhz": 4300,
+      "cache_l2_mb": 5, "cache_l3_mb": 12, "tdp_w": 58, "socket": "lga1700", "process_nm": 10,
+      "memory_type": "ddr5", "max_memory_speed": 4800, "pcie_lanes": 20, "has_igpu": "false" } },
+    "u9285k": { "name": "Core Ultra 9 285K", "launch": "out/2024", "specs": {
+      "cores": 24, "threads": 24, "base_clock_mhz": 3700, "boost_clock_mhz": 5700,
+      "cache_l2_mb": 40, "cache_l3_mb": 36, "tdp_w": 125, "socket": "lga1851", "process_nm": 3,
+      "memory_type": "ddr5", "max_memory_speed": 6400, "pcie_lanes": 24, "has_igpu": "true" } },
+    "u7265k": { "name": "Core Ultra 7 265K", "launch": "out/2024", "specs": {
+      "cores": 20, "threads": 20, "base_clock_mhz": 3900, "boost_clock_mhz": 5500,
+      "cache_l2_mb": 36, "cache_l3_mb": 30, "tdp_w": 125, "socket": "lga1851", "process_nm": 3,
+      "memory_type": "ddr5", "max_memory_speed": 6400, "pcie_lanes": 24, "has_igpu": "true" } },
+    "u5245k": { "name": "Core Ultra 5 245K", "launch": "out/2024", "specs": {
+      "cores": 14, "threads": 14, "base_clock_mhz": 4200, "boost_clock_mhz": 5200,
+      "cache_l2_mb": 26, "cache_l3_mb": 24, "tdp_w": 125, "socket": "lga1851", "process_nm": 3,
+      "memory_type": "ddr5", "max_memory_speed": 6400, "pcie_lanes": 24, "has_igpu": "true" } },
+    "u5225f": { "name": "Core Ultra 5 225F", "launch": "jan/2025", "specs": {
+      "cores": 10, "threads": 10, "base_clock_mhz": 3300, "boost_clock_mhz": 4900,
+      "cache_l2_mb": 22, "cache_l3_mb": 20, "tdp_w": 65, "socket": "lga1851", "process_nm": 3,
+      "memory_type": "ddr5", "max_memory_speed": 6400, "pcie_lanes": 24, "has_igpu": "false" } }
+  }
+}

@@ -20,7 +20,12 @@ public sealed class Product
     public List<Listing> Listings { get; set; } = [];
 }
 
-/// <summary>Spec estruturada (EAV) que alimenta a engine de compatibilidade (M3).</summary>
+/// <summary>
+/// Spec estruturada (EAV) que alimenta a engine de compatibilidade (M3).
+/// Source define a precedência do valor: manual &gt; page &gt; title &gt; reference
+/// (specs da página de produto da loja sobrescrevem o título; dados curados de
+/// referência só preenchem lacunas).
+/// </summary>
 public sealed class ProductAttribute
 {
     public Guid Id { get; set; }
@@ -29,6 +34,7 @@ public sealed class ProductAttribute
     public string? ValueText { get; set; }
     public decimal? ValueNum { get; set; }
     public bool? ValueBool { get; set; }
+    public string Source { get; set; } = "title"; // reference | title | page | manual
 
     public Product Product { get; set; } = null!;
 }
@@ -49,6 +55,9 @@ public sealed class Listing
     public bool InStock { get; set; }
     public string? Thumbnail { get; set; }
     public DateTime LastSeenAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>Quando a ficha técnica da página do produto foi coletada (collect-details).</summary>
+    public DateTime? SpecsCollectedAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public Product Product { get; set; } = null!;

@@ -199,6 +199,7 @@ public static class CatalogEndpoints
                     a.ValueText,
                     a.ValueNum,
                     a.ValueBool,
+                    a.Source,
                 }),
                 Listings = p.Listings.Select(l => new
                 {

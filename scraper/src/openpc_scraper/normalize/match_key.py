@@ -13,7 +13,9 @@ from .text import normalize
 # Espelho dos GeneratedRegex do C# (aplicados sobre o texto normalizado).
 _CPU_AMD_RE = re.compile(r"\bryzen\s+(?:[3579]\s*)?(\d{3,5}[a-z0-9]*)\b")
 _CPU_INTEL_RE = re.compile(r"\b(?:core\s+)?(?:ultra\s+)?(i[3579]|ultra\s*[579])\s*-?\s*(\d{3,5}[a-z0-9]*)\b")
-_GPU_NVIDIA_RE = re.compile(r"\b(?:rtx|gtx|titan)\s*(\d{3,4}[a-z0-9]*)\b")
+_GPU_NVIDIA_RE = re.compile(
+    r"\b(?:rtx|gtx|titan)\s*(\d{3,4}[a-z0-9]*\s*(?:ti|super)?)"
+)
 _GPU_AMD_RE = re.compile(r"\b(?:radeon\s+)?rx\s*(\d{3,4}[a-z0-9]*\s*(?:xt|gre)?)\b")
 
 
