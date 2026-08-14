@@ -78,6 +78,7 @@ class DetailsCollectionService:
                 .where(
                     Listing.store_id == store.id,
                     Listing.in_stock.is_(True),
+                    Listing.product.has(category_id=category.id),
                     (Listing.specs_collected_at.is_(None)) | (Listing.specs_collected_at < cutoff),
                 )
                 .order_by(Listing.last_seen_at.desc())

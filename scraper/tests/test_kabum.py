@@ -68,4 +68,8 @@ async def test_collect_catalogo_vazio_interrompe_apos_onda(monkeypatch):
 
 async def test_collect_categoria_sem_rota_levanta_erro():
     with pytest.raises(ValueError, match="sem rota"):
-        await kabum.collect("case")
+        await kabum.collect("monitor")
+
+
+async def test_rota_case_mapeada_para_perifericos_gabinetes():
+    assert kabum.CATEGORY_PATHS["case"] == "perifericos/gabinetes"
