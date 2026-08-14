@@ -24,8 +24,9 @@ from ..db.models import (
     ProductMatchCandidate,
     Store,
 )
-from ..normalize import noise_filter, part_number
+from ..normalize import noise_filter, part_number, reference
 from ..normalize.text import normalize as normalize_text
+from .attributes import apply_specs
 
 logger = logging.getLogger("openpc_scraper.ingest")
 
@@ -66,22 +67,6 @@ def normalize_brand(manufacturer: str | None, title: str) -> str:
 
 def _normalize_model(match_key: str | None) -> str:
     return match_key if match_key else uuid.uuid4().hex[:12]
-
-
-def _parse_num(value: str) -> float | None:
-    try:
-        return float(value.replace(",", "."))
-    except ValueError:
-        return None
-
-
-def _parse_bool(value: str) -> bool | None:
-    v = value.lower()
-    if v == "true":
-        return True
-    if v == "false":
-        return False
-    return None
 
 
 class IngestionService:
@@ -186,7 +171,7 @@ class IngestionService:
                 if product.part_number is None and item.part_number is not None:
                     product.part_number = part_number.normalize(item.part_number)
 
-            self._apply_attributes(product, item.specs, attributes_by_product)
+            self._apply_attributes(product, item, attributes_by_product)
 
             if listing is None:
                 listing = Listing(
@@ -265,28 +250,17 @@ class IngestionService:
     def _apply_attributes(
         self,
         product: Product,
-        specs: dict[str, str],
+        item: RawListing,
         cache: dict[uuid.UUID, dict[str, ProductAttribute]],
     ) -> None:
-        if not specs:
-            return
+        """Specs do produto em ordem de precedência: banco de referência por
+        chip (preenche lacunas) e depois título da listagem (sobrescreve).
+        A ficha da página de produto (source='page') é aplicada pelo job
+        collect-details e vence ambas."""
         existing = cache.setdefault(product.id, {})
-        for key, value in specs.items():
-            attr = existing.get(key)
-            if attr is not None:
-                if attr.value_text == value:
-                    continue
-                attr.value_text = value
-                attr.value_num = _parse_num(value)
-                attr.value_bool = _parse_bool(value)
-            else:
-                attr = ProductAttribute(
-                    id=uuid.uuid4(),
-                    product_id=product.id,
-                    key=key,
-                    value_text=value,
-                    value_num=_parse_num(value),
-                    value_bool=_parse_bool(value),
-                )
-                existing[key] = attr
-                self._db.add(attr)
+
+        ref = reference.lookup(item.category_slug, item.title)
+        if ref is not None:
+            apply_specs(self._db, product, ref[1], "reference", existing)
+
+        apply_specs(self._db, product, item.specs, "title", existing)

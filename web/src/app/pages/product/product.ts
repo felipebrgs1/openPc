@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import type { AlertResponse, PricePoint, ProductDetail } from '../../api';
-import { formatBRL, formatDateTime, formatSpecValue, specLabel } from '../../format';
+import { formatBRL, formatDateTime, formatSpecValue, specGroups, specLabel } from '../../format';
 import { Seo } from '../../seo';
 import { BuildState } from '../../build-state';
 import { Sparkline } from '../../components/sparkline/sparkline';
@@ -44,6 +44,7 @@ export class Product {
   protected readonly formatDateTime = formatDateTime;
   protected readonly formatSpecValue = formatSpecValue;
   protected readonly specLabel = specLabel;
+  protected readonly specGroups = specGroups;
 
   constructor() {
     this.seo.set('Produto');

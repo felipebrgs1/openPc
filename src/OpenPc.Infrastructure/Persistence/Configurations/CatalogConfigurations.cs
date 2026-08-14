@@ -33,6 +33,7 @@ public sealed class ProductAttributeConfiguration : IEntityTypeConfiguration<Pro
         builder.HasIndex(a => new { a.ProductId, a.Key }).IsUnique();
         builder.Property(a => a.Key).HasMaxLength(48);
         builder.Property(a => a.ValueText).HasMaxLength(256);
+        builder.Property(a => a.Source).HasMaxLength(16);
 
         builder.HasOne(a => a.Product)
             .WithMany(p => p.Attributes)
@@ -54,6 +55,7 @@ public sealed class ListingConfiguration : IEntityTypeConfiguration<Listing>
         builder.Property(l => l.Thumbnail).HasMaxLength(512);
         builder.Property(l => l.PriceCash).HasPrecision(12, 2);
         builder.Property(l => l.PriceCard).HasPrecision(12, 2);
+        builder.Property(l => l.SpecsCollectedAt);
 
         builder.HasOne(l => l.Product)
             .WithMany(p => p.Listings)

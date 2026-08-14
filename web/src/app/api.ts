@@ -44,6 +44,8 @@ export interface ProductSpec {
   valueText: string | null;
   valueNum: number | null;
   valueBool: boolean | null;
+  /** fonte do valor: reference | title | page | manual (precedência page > title > reference) */
+  source?: string;
 }
 
 export interface Listing {

@@ -88,6 +88,7 @@ class ProductAttribute(Base):
     value_text: Mapped[str | None] = mapped_column("ValueText", String(256))
     value_num: Mapped[float | None] = mapped_column("ValueNum", Numeric(12, 2))
     value_bool: Mapped[bool | None] = mapped_column("ValueBool", Boolean)
+    source: Mapped[str] = mapped_column("Source", String(16), default="title")  # reference|title|page|manual
 
     product: Mapped[Product] = relationship(back_populates="attributes")
 
@@ -109,6 +110,7 @@ class Listing(Base):
     in_stock: Mapped[bool] = mapped_column("InStock", Boolean, default=False)
     thumbnail: Mapped[str | None] = mapped_column("Thumbnail", String(512))
     last_seen_at: Mapped[datetime] = mapped_column("LastSeenAt", DateTime(timezone=True), default=_now)
+    specs_collected_at: Mapped[datetime | None] = mapped_column("SpecsCollectedAt", DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column("CreatedAt", DateTime(timezone=True), default=_now)
 
     product: Mapped[Product] = relationship(back_populates="listings")

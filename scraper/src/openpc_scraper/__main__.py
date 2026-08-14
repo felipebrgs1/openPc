@@ -7,6 +7,7 @@ Comandos:
   sync-images
   alerts-check <productId>
   backfill-attributes
+  collect-details [store] [category] [--limit N] [--refresh-days D]
   scheduler                      roda o agendamento (APScheduler)
 """
 
@@ -149,6 +150,16 @@ async def _main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("backfill-attributes", help="calcula atributos (série GPU, tipo de memória)")
 
+    p = sub.add_parser(
+        "collect-details",
+        help="coleta a ficha técnica das páginas de produto (specs detalhadas)",
+    )
+    p.add_argument("store", nargs="?", default="kabum", help="loja (kabum|terabyte|pichau; default kabum)")
+    p.add_argument("category", nargs="?", default="gpu", help="categoria (default gpu)")
+    p.add_argument("--limit", type=int, default=20, help="páginas de produto por execução (default 20)")
+    p.add_argument("--refresh-days", type=int, default=30, help="recoletar após N dias (default 30)")
+    p.add_argument("--concurrency", type=int, default=3, help="fetches paralelos (kabum; default 3)")
+
     sub.add_parser("scheduler", help="roda o agendamento (APScheduler)")
 
     args = parser.parse_args(argv)
@@ -185,6 +196,21 @@ async def _main(argv: list[str] | None = None) -> int:
             await _alerts_check(db, uuid.UUID(args.product_id))
         elif args.command == "backfill-attributes":
             await _backfill_attributes(db)
+        elif args.command == "collect-details":
+            from .jobs.details import DetailsCollectionService
+
+            pool = BrowserPool()
+            try:
+                service = DetailsCollectionService(db, pool)
+                await service.collect(
+                    args.store,
+                    args.category,
+                    limit=args.limit,
+                    refresh_days=args.refresh_days,
+                    concurrency=args.concurrency,
+                )
+            finally:
+                await pool.close()
         elif args.command == "scheduler":
             from apscheduler.schedulers.asyncio import AsyncIOScheduler
 

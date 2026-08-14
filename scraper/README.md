@@ -33,6 +33,7 @@ uv run python -m openpc_scraper aggregate-prices [days]
 uv run python -m openpc_scraper sync-images
 uv run python -m openpc_scraper alerts-check <productId>
 uv run python -m openpc_scraper backfill-attributes
+uv run python -m openpc_scraper collect-details [store] [category] [--limit N] [--refresh-days D]   # ficha técnica das páginas de produto
 uv run python -m openpc_scraper scheduler                     # agendamento
 ```
 
@@ -40,6 +41,15 @@ O `run-once` coleta em paralelo (default 4 jobs simultâneos, máx. 2 por
 loja); a ingestão continua serializada para preservar o dedup e as
 constraints. Use `--concurrency 1` para o comportamento sequencial.
 O Kabum busca páginas em ondas concorrentes de 3 (vs. fetch sequencial).
+
+O `collect-details` visita as páginas de produto (Kabum via HTTP puro;
+Pichau/Terabyte via Playwright) e extrai a ficha técnica completa (clocks,
+CUDA cores, barramento, conectores...). Roda incremental: só listings em
+estoque com `SpecsCollectedAt` vazio ou vencido (`--refresh-days`); use
+`--limit` baixo (default 20) para não sobrecarregar as lojas. As specs da
+página têm fonte `page` e sobrescrevem título e referência (precedência
+page > title > reference; o banco de referência por chip fica em
+`src/openpc_scraper/data/reference_specs.json` e só preenche lacunas).
 
 Configuração via env:
 
