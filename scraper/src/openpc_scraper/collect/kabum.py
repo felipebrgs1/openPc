@@ -22,6 +22,7 @@ CATEGORY_PATHS: dict[str, str] = {
     "storage": "hardware/ssd-2-5",
     "psu": "hardware/fontes",
     "cooler": "hardware/coolers",
+    "case": "perifericos/gabinetes",
 }
 
 PAGE_SIZE = 60
