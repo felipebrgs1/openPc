@@ -1,10 +1,14 @@
 <div class="card overflow-hidden">
-  <p class="border-b border-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700">
+  <p class="border-b border-brand-100 px-4 py-3 text-sm font-semibold text-ink">
     Histórico de preço (90 dias)
   </p>
 
-  @if (!geometry()) {
-    <p class="px-4 py-6 text-center text-sm text-zinc-500">
+  @if (loading()) {
+    <div class="px-4 py-6">
+      <div class="skeleton h-40 w-full"></div>
+    </div>
+  } @else if (!geometry()) {
+    <p class="px-4 py-6 text-center text-sm text-ink-muted">
       Sem histórico suficiente para o gráfico — volte em alguns dias para ver a
       evolução do preço.
     </p>
@@ -21,7 +25,7 @@
         [attr.x2]="geometry()!.labels[2].x"
         [attr.y1]="geometry()!.lastY"
         [attr.y2]="geometry()!.lastY"
-        class="stroke-zinc-300"
+        class="stroke-brand-200"
         stroke-dasharray="4 4"
         stroke-width="1"
       />
@@ -34,17 +38,17 @@
           [attr.x]="label.x"
           y="196"
           text-anchor="middle"
-          class="fill-zinc-400"
+          class="fill-ink-faint"
           font-size="11"
         >
           {{ label.text }}
         </text>
       }
     </svg>
-    <p class="mt-2 px-4 pb-3 text-sm text-zinc-600">
+    <p class="mt-2 px-4 pb-3 text-sm text-ink-muted">
       <span class="font-semibold">{{ formatBRL(geometry()!.last.price) }}</span>
       em {{ formatDate(geometry()!.last.date) }}
-      <span class="text-zinc-400">(min {{ formatBRL(geometry()!.min) }}, máx {{ formatBRL(geometry()!.max) }})</span>
+      <span class="text-ink-faint">(min {{ formatBRL(geometry()!.min) }}, máx {{ formatBRL(geometry()!.max) }})</span>
     </p>
   }
 </div>

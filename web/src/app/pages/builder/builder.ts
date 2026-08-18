@@ -1,7 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import type { BuildItemDto, Category, IssueDto, ProductListItem, ProductsResponse } from '../../api';
-import { categoryLabel, isMultiSlot } from '../../api';
+import { NAV_CATEGORIES, categoryLabel, isMultiSlot, type BuildItemDto, type Category, type IssueDto, type ProductListItem, type ProductsResponse } from '../../api';
 import { formatBRL } from '../../format';
 import { Seo } from '../../seo';
 import { BuildState } from '../../build-state';
@@ -22,9 +21,11 @@ export class Builder {
   protected readonly comparison = this.buildState.comparison;
 
   protected readonly categories = httpResource<Category[]>(() => '/api/v1/categories');
-  protected readonly slots = computed(() =>
-    [...(this.categories.value() ?? [])].sort((a, b) => a.displayOrder - b.displayOrder),
-  );
+  protected readonly slots = computed(() => {
+    const fromApi = this.categories.value();
+    const list = fromApi?.length ? fromApi : NAV_CATEGORIES;
+    return [...list].sort((a, b) => a.displayOrder - b.displayOrder);
+  });
 
   /** Slot aberto no seletor (modal); null = fechado. */
   protected readonly picker = signal<Category | null>(null);

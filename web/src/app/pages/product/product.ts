@@ -1,11 +1,12 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
-import type { AlertResponse, PricePoint, ProductDetail } from '../../api';
+import { categoryLabel, type AlertResponse, type PricePoint, type ProductDetail } from '../../api';
 import { formatBRL, formatDateTime, formatSpecValue, specGroups, specLabel } from '../../format';
 import { Seo } from '../../seo';
 import { BuildState } from '../../build-state';
+import { RecentProducts } from '../../recent';
 import { Sparkline } from '../../components/sparkline/sparkline';
 
 @Component({
@@ -20,6 +21,7 @@ export class Product {
   private readonly http = inject(HttpClient);
   private readonly seo = inject(Seo);
   private readonly buildState = inject(BuildState);
+  private readonly recent = inject(RecentProducts);
 
   protected readonly product = httpResource<ProductDetail>(() => `/api/v1/products/${this.id()}`);
   protected readonly prices = httpResource<PricePoint[]>(() => `/api/v1/products/${this.id()}/prices?days=90`);
@@ -45,9 +47,27 @@ export class Product {
   protected readonly formatSpecValue = formatSpecValue;
   protected readonly specLabel = specLabel;
   protected readonly specGroups = specGroups;
+  protected readonly categoryLabel = categoryLabel;
 
   constructor() {
     this.seo.set('Produto');
+
+    effect(() => {
+      const p = this.product.value();
+      if (!p) return;
+      this.seo.set(p.name, `${p.brand} no OpenPC — compare preços e adicione ao build.`);
+      this.recent.push({
+        id: p.id,
+        name: p.name,
+        brand: p.brand,
+        model: p.model,
+        partNumber: p.partNumber,
+        imageUrl: p.imageUrl,
+        categorySlug: p.categorySlug,
+        price: this.bestPrice(),
+        storeCount: p.listings.length,
+      });
+    });
   }
 
   async addToBuild(): Promise<void> {

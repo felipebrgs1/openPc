@@ -5,9 +5,11 @@ import { Product } from './pages/product/product';
 import { Builder } from './pages/builder/builder';
 import { BuildView } from './pages/build-view/build-view';
 import { Offers } from './pages/offers/offers';
+import { Search } from './pages/search/search';
 
 export const routes: Routes = [
   { path: '', component: Home },
+  { path: 'busca', component: Search },
   { path: 'pecas/:category', component: Category },
   { path: 'pecas/:category/:id', component: Product },
   { path: 'montar', component: Builder },

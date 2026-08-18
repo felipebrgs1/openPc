@@ -1,9 +1,10 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
-import type { Category as CategoryDto, ProductsResponse } from '../../api';
+import { CATEGORY_LABELS, type Category as CategoryDto, type ProductsResponse } from '../../api';
 import { Seo } from '../../seo';
-import { formatBRL } from '../../format';
+import { ProductCard } from '../../components/product-card/product-card';
+import { ProductRow } from '../../components/product-row/product-row';
 
 interface AttrFilter {
   key: string;
@@ -13,7 +14,7 @@ interface AttrFilter {
 
 @Component({
   selector: 'app-category',
-  imports: [RouterLink],
+  imports: [RouterLink, ProductCard, ProductRow],
   templateUrl: './category.html',
 })
 export class Category {
@@ -26,6 +27,7 @@ export class Category {
   protected readonly minPrice = signal<number | null>(null);
   protected readonly maxPrice = signal<number | null>(null);
   protected readonly limit = signal(24);
+  protected readonly view = signal<'grid' | 'list'>('grid');
 
   /** Valor selecionado no filtro de atributo (socket, série, tipo...). */
   protected readonly attrValue = signal('');
@@ -84,6 +86,7 @@ export class Category {
   protected readonly categoryName = computed(
     () =>
       this.categories.value()?.find((c) => c.slug === this.category())?.name ??
+      CATEGORY_LABELS[this.category()] ??
       this.category(),
   );
 
@@ -118,10 +121,9 @@ export class Category {
     }
   });
 
-  protected readonly formatBRL = formatBRL;
-
   constructor() {
     this.seo.set('Peças de PC');
+    effect(() => this.seo.set(this.categoryName()));
 
     // Troca de categoria (a rota /pecas/:category reutiliza a instância):
     // reseta o valor do filtro de atributo quando a chave muda (socket →

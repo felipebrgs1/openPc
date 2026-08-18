@@ -1,12 +1,11 @@
-<nav class="text-sm text-zinc-500">
+<nav class="crumb">
   <a routerLink="/" class="hover:text-brand-600">Catálogo</a>
   <span class="mx-1">/</span>
-  <span class="font-medium text-zinc-800">{{ categoryName() }}</span>
+  <span class="font-medium text-ink">{{ categoryName() }}</span>
 </nav>
 
-<div class="mt-4 grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
-  <!-- Filtros -->
-  <aside class="card h-fit p-4 lg:sticky lg:top-20">
+<div class="mt-5 grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+  <aside class="card h-fit p-4 lg:sticky lg:top-32">
     <p class="card-title">Filtrar</p>
 
     <form
@@ -14,20 +13,12 @@
       (submit)="applyFilters(q, minEl, maxEl); $event.preventDefault()"
     >
       <div>
-        <label for="f-q" class="mb-1 block text-xs font-medium text-zinc-500">Buscar</label>
-        <input
-          #q
-          id="f-q"
-          type="search"
-          placeholder="ex: 7600"
-          class="input"
-        />
+        <label for="f-q" class="mb-1 block text-xs font-medium text-ink-muted">Buscar</label>
+        <input #q id="f-q" type="search" placeholder="ex: 7600" class="input" />
       </div>
 
       <div>
-        <label for="f-sort" class="mb-1 block text-xs font-medium text-zinc-500">
-          Ordenar por
-        </label>
+        <label for="f-sort" class="mb-1 block text-xs font-medium text-ink-muted">Ordenar por</label>
         <select id="f-sort" [value]="sort()" (change)="changeSort($event)" class="input">
           <option value="price_asc">Menor preço</option>
           <option value="price_desc">Maior preço</option>
@@ -37,9 +28,7 @@
 
       @if (attrFilter(); as f) {
         <div>
-          <label for="f-attr" class="mb-1 block text-xs font-medium text-zinc-500">
-            {{ f.label }}
-          </label>
+          <label for="f-attr" class="mb-1 block text-xs font-medium text-ink-muted">{{ f.label }}</label>
           <select id="f-attr" [value]="attrValue()" (change)="onAttrChange($event)" class="input">
             <option value="">Todos</option>
             @for (opt of f.options; track opt.value) {
@@ -50,10 +39,10 @@
       }
 
       <div>
-        <span class="mb-1 block text-xs font-medium text-zinc-500">Faixa de preço</span>
+        <span class="mb-1 block text-xs font-medium text-ink-muted">Faixa de preço</span>
         <div class="flex items-center gap-2">
           <input #minEl type="number" min="0" placeholder="Mín" class="input" />
-          <span class="text-zinc-400">–</span>
+          <span class="text-ink-faint">–</span>
           <input #maxEl type="number" min="0" placeholder="Máx" class="input" />
         </div>
       </div>
@@ -67,78 +56,100 @@
     </form>
   </aside>
 
-  <!-- Lista de peças -->
   <section>
-    <div class="flex items-baseline justify-between">
-      <h2 class="text-lg font-semibold text-zinc-900">{{ categoryName() }}</h2>
-      @if (page(); as result) {
-        <span class="text-sm text-zinc-400">{{ result.total }} peças</span>
-      }
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h1 class="font-display text-2xl font-semibold tracking-tight text-ink">{{ categoryName() }}</h1>
+        @if (page(); as result) {
+          <p class="mt-0.5 text-sm text-ink-faint">{{ result.total }} peças</p>
+        }
+      </div>
+      <div class="flex rounded-xl border border-brand-200 p-0.5">
+        <button
+          type="button"
+          (click)="view.set('grid')"
+          class="rounded-lg px-2.5 py-1 text-xs font-medium transition"
+          [class.bg-brand-800]="view() === 'grid'"
+          [class.text-cream]="view() === 'grid'"
+          [class.text-ink-muted]="view() !== 'grid'"
+        >
+          Grade
+        </button>
+        <button
+          type="button"
+          (click)="view.set('list')"
+          class="rounded-lg px-2.5 py-1 text-xs font-medium transition"
+          [class.bg-brand-800]="view() === 'list'"
+          [class.text-cream]="view() === 'list'"
+          [class.text-ink-muted]="view() !== 'list'"
+        >
+          Lista
+        </button>
+      </div>
     </div>
 
     @if (page(); as result) {
       @if (products.error()) {
-        <p class="mt-4 text-sm text-red-600">
-          Não foi possível atualizar as peças — mostrando dados anteriores.
-        </p>
+        <p class="mt-3 text-sm text-red-700">Não foi possível atualizar — mostrando dados anteriores.</p>
       }
       @if (result.items.length === 0) {
-        <p class="card mt-4 p-6 text-center text-sm text-zinc-500">
+        <p class="card mt-4 p-8 text-center text-sm text-ink-muted">
           Nenhuma peça encontrada com esses filtros.
         </p>
-      } @else {
-        <div class="card mt-4 divide-y divide-zinc-100 [overflow-anchor:none]">
+      } @else if (view() === 'grid') {
+        <ul class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           @for (product of result.items; track product.id) {
-            <a
-              routerLink="/pecas/{{ product.categorySlug }}/{{ product.id }}"
-              class="group flex items-center gap-3 px-3 py-2.5 transition hover:bg-brand-50/60 sm:px-4"
-            >
-              <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-zinc-50 p-1">
-                @if (product.imageUrl) {
-                  <img
-                    [src]="product.imageUrl"
-                    [alt]="product.name"
-                    loading="lazy"
-                    class="max-h-full max-w-full object-contain"
-                  />
-                }
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="line-clamp-2 text-sm font-medium text-zinc-800 group-hover:text-brand-700">
-                  {{ product.name }}
-                </p>
-                <p class="mt-0.5 text-xs text-zinc-400">
-                  {{ product.brand }}
-                  @if (product.storeCount > 1) {
-                    · {{ product.storeCount }} lojas
-                  }
-                </p>
-              </div>
-              <div class="shrink-0 text-right">
-                <p class="text-sm font-bold text-zinc-900">{{ formatBRL(product.price) }}</p>
-                <p class="text-xs text-zinc-400 group-hover:text-brand-600">Detalhes →</p>
-              </div>
-            </a>
+            <li>
+              <app-product-card [product]="product" />
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="card mt-4 divide-y divide-brand-100 [overflow-anchor:none]">
+          @for (product of result.items; track product.id) {
+            <app-product-row [product]="product" />
           }
         </div>
-
-        @if (result.items.length < result.total) {
-          <div class="mt-5 text-center">
-            <button
-              type="button"
-              (click)="loadMore()"
-              [disabled]="products.isLoading()"
-              class="btn-outline disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Carregar mais ({{ result.items.length }} de {{ result.total }})
-            </button>
-          </div>
-        }
       }
-    } @else if (products.isLoading()) {
-      <p class="mt-4 text-sm text-zinc-500">Carregando peças...</p>
+
+      @if (result.items.length > 0 && result.items.length < result.total) {
+        <div class="mt-5 text-center">
+          <button
+            type="button"
+            (click)="loadMore()"
+            [disabled]="products.isLoading()"
+            class="btn-outline disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Carregar mais ({{ result.items.length }} de {{ result.total }})
+          </button>
+        </div>
+      }
     } @else {
-      <p class="mt-4 text-sm text-red-600">Não foi possível carregar as peças.</p>
+      @if (view() === 'grid') {
+        <ul class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+            <li class="card p-3">
+              <div class="skeleton h-36 w-full"></div>
+              <div class="skeleton mt-3 h-4 w-5/6"></div>
+              <div class="skeleton mt-2 h-3 w-1/3"></div>
+              <div class="skeleton mt-4 h-5 w-24"></div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="card mt-4 divide-y divide-brand-100">
+          @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+            <div class="flex items-center gap-3 px-4 py-2.5">
+              <div class="skeleton h-14 w-14 shrink-0"></div>
+              <div class="min-w-0 flex-1">
+                <div class="skeleton h-4 w-3/4"></div>
+                <div class="skeleton mt-2 h-3 w-24"></div>
+              </div>
+              <div class="skeleton h-4 w-16"></div>
+            </div>
+          }
+        </div>
+      }
     }
   </section>
 </div>

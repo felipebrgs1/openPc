@@ -179,6 +179,21 @@ export const CATEGORY_LABELS: Record<string, string> = {
   cooler: 'Cooler',
 };
 
+/**
+ * Categorias estáticas do catálogo — usadas no nav/home/montador no primeiro
+ * paint (sem esperar a API) para não haver layout shift.
+ */
+export const NAV_CATEGORIES: Category[] = [
+  { id: 'cpu', slug: 'cpu', name: 'Processador', displayOrder: 1 },
+  { id: 'motherboard', slug: 'motherboard', name: 'Placa-mãe', displayOrder: 2 },
+  { id: 'gpu', slug: 'gpu', name: 'Placa de vídeo', displayOrder: 3 },
+  { id: 'memory', slug: 'memory', name: 'Memória RAM', displayOrder: 4 },
+  { id: 'storage', slug: 'storage', name: 'Armazenamento', displayOrder: 5 },
+  { id: 'psu', slug: 'psu', name: 'Fonte', displayOrder: 6 },
+  { id: 'case', slug: 'case', name: 'Gabinete', displayOrder: 7 },
+  { id: 'cooler', slug: 'cooler', name: 'Cooler', displayOrder: 8 },
+];
+
 /** Slots que aceitam mais de uma peça (memória e armazenamento). */
 export const MULTI_SLOT_CATEGORIES = new Set(['memory', 'storage']);
 
