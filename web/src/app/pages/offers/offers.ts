@@ -1,13 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { httpResource } from '@angular/common/http';
 import type { OffersResponse } from '../../api';
-import { formatBRL } from '../../format';
 import { Seo } from '../../seo';
+import { ProductCard } from '../../components/product-card/product-card';
 
 @Component({
   selector: 'app-offers',
-  imports: [RouterLink],
+  imports: [RouterLink, ProductCard],
   templateUrl: './offers.html',
 })
 export class Offers {
@@ -18,13 +18,30 @@ export class Offers {
     () => `/api/v1/offers?period=${this.period()}&limit=30`,
   );
 
-  protected readonly formatBRL = formatBRL;
+  private readonly lastGood = signal<OffersResponse | null>(null);
+
+  protected readonly page = computed<OffersResponse | null>(() => {
+    try {
+      return this.offers.value() ?? this.lastGood();
+    } catch {
+      return this.lastGood();
+    }
+  });
 
   constructor() {
     this.seo.set(
       'OpenPC — ofertas e quedas de preço',
       'Maiores quedas de preço em hardware nas últimas 24 horas e 7 dias.',
     );
+
+    effect(() => {
+      try {
+        const v = this.offers.value();
+        if (v) this.lastGood.set(v);
+      } catch {
+        /* mantém o último bom */
+      }
+    });
   }
 
   protected dropPercent(item: OffersResponse['items'][number]): number | null {

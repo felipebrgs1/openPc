@@ -1,0 +1,31 @@
+<a
+  routerLink="/pecas/{{ product().categorySlug }}/{{ product().id }}"
+  class="group flex items-center gap-3 px-3 py-2.5 transition hover:bg-brand-50/80 sm:px-4"
+>
+  <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-brand-50 p-1">
+    @if (product().imageUrl) {
+      <img
+        [src]="product().imageUrl"
+        [alt]="product().name"
+        loading="lazy"
+        decoding="async"
+        class="max-h-full max-w-full object-contain"
+      />
+    }
+  </div>
+  <div class="min-w-0 flex-1">
+    <p class="line-clamp-2 text-sm font-medium text-ink group-hover:text-brand-700">
+      {{ product().name }}
+    </p>
+    <p class="mt-0.5 text-xs text-ink-faint">
+      {{ product().brand }}
+      @if (product().storeCount > 1) {
+        · {{ product().storeCount }} lojas
+      }
+    </p>
+  </div>
+  <div class="shrink-0 text-right">
+    <p class="text-sm font-bold text-ink">{{ formatBRL(product().price) }}</p>
+    <p class="text-xs text-ink-faint group-hover:text-brand-600">Detalhes →</p>
+  </div>
+</a>

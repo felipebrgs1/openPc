@@ -12,6 +12,7 @@ const PAD = { top: 16, right: 12, bottom: 28, left: 12 };
 })
 export class Sparkline {
   readonly points = input.required<PricePoint[]>();
+  readonly loading = input(false);
   protected readonly formatBRL = formatBRL;
   protected readonly formatDate = formatDate;
 

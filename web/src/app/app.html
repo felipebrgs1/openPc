@@ -1,58 +1,237 @@
-<header class="bg-brand-900 text-white">
-  <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
-    <a routerLink="/" class="flex items-baseline gap-0.5">
-      <span class="text-xl font-bold tracking-tight">
-        Open<span class="text-brand-300">PC</span>
-      </span>
-      <span class="ml-2 hidden text-xs text-brand-200 sm:inline">
-        compare preços · monte sem incompatibilidade
-      </span>
-    </a>
-    <a
-      routerLink="/montar"
-      routerLinkActive="bg-brand-100"
-      class="rounded-lg bg-white px-3.5 py-1.5 text-sm font-semibold text-brand-800 shadow-sm transition hover:bg-brand-50"
+<a
+  href="#conteudo"
+  class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[80] focus:rounded-lg focus:bg-paper focus:px-3 focus:py-2 focus:text-sm focus:shadow"
+>
+  Ir ao conteúdo
+</a>
+
+<header class="sticky top-0 z-50 border-b border-brand-200/80 bg-paper/90 backdrop-blur-md">
+  <div class="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
+    <button
+      type="button"
+      class="btn-ghost -ml-2 !px-2 lg:hidden"
+      (click)="openMenu()"
+      aria-label="Abrir menu"
     >
-      Montar meu PC
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" class="h-5 w-5" aria-hidden="true">
+        <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
+    </button>
+
+    <a routerLink="/" class="flex shrink-0 items-baseline">
+      <span class="font-display text-2xl font-semibold tracking-tight text-ink">
+        Open<span class="text-clay-600">PC</span>
+      </span>
     </a>
+
+    <form
+      data-search
+      class="relative hidden min-w-0 flex-1 md:block"
+      (submit)="goSearch(); $event.preventDefault()"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.75"
+        class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-faint"
+        aria-hidden="true"
+      >
+        <circle cx="11" cy="11" r="7" />
+        <path stroke-linecap="round" d="m20 20-3-3" />
+      </svg>
+      <input
+        type="search"
+        placeholder="Buscar peça, modelo ou marca…"
+        [value]="searchInput()"
+        (input)="onSearchInput($any($event.target).value)"
+        (focus)="searchOpen.set(true)"
+        class="input pl-10"
+        autocomplete="off"
+        aria-label="Buscar peças"
+      />
+      @if (searchOpen() && searchQ().length >= 2) {
+        <div
+          class="card absolute top-[calc(100%+6px)] right-0 left-0 z-50 overflow-hidden py-1"
+          role="listbox"
+        >
+          @if (searchResults.isLoading()) {
+            <p class="px-3 py-2 text-sm text-ink-faint">Buscando…</p>
+          } @else if ((searchResults.value()?.items?.length ?? 0) === 0) {
+            <p class="px-3 py-2 text-sm text-ink-faint">Nada encontrado para “{{ searchQ() }}”.</p>
+          } @else {
+            @for (p of searchResults.value()!.items; track p.id) {
+              <a
+                routerLink="/pecas/{{ p.categorySlug }}/{{ p.id }}"
+                class="flex items-center gap-3 px-3 py-2 hover:bg-brand-50"
+                role="option"
+              >
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50">
+                  @if (p.imageUrl) {
+                    <img [src]="p.imageUrl" [alt]="p.name" class="max-h-full max-w-full object-contain" />
+                  }
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-sm text-ink">{{ p.name }}</span>
+                  <span class="text-xs text-ink-faint">{{ p.brand }}</span>
+                </span>
+                <span class="shrink-0 text-sm font-semibold text-ink">{{ formatBRL(p.price) }}</span>
+              </a>
+            }
+            <button
+              type="submit"
+              class="block w-full border-t border-brand-100 px-3 py-2 text-left text-sm font-medium text-brand-700 hover:bg-brand-50"
+            >
+              Ver todos os resultados →
+            </button>
+          }
+        </div>
+      }
+    </form>
+
+    <nav class="ml-auto flex items-center gap-1">
+      <a
+        routerLink="/ofertas"
+        routerLinkActive="bg-brand-100 text-brand-800"
+        class="btn-ghost hidden !px-3 sm:inline-flex"
+      >
+        Ofertas
+      </a>
+      <a routerLink="/montar" class="btn-primary !px-3">
+        <span class="hidden sm:inline">Montar meu PC</span>
+        <span class="sm:hidden">Montar</span>
+        @if (buildCount() > 0) {
+          <span class="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-clay-500 px-1 text-[11px] font-bold text-white">
+            {{ buildCount() }}
+          </span>
+        }
+      </a>
+      <button
+        type="button"
+        class="btn-ghost !px-2 md:hidden"
+        (click)="toggleMobileSearch()"
+        aria-label="Buscar"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" class="h-5 w-5" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path stroke-linecap="round" d="m20 20-3-3" />
+        </svg>
+      </button>
+    </nav>
   </div>
+
+  <nav class="border-t border-brand-100" aria-label="Categorias">
+    <div class="mx-auto flex h-11 max-w-6xl items-center gap-0.5 overflow-x-auto px-2 sm:px-4">
+      @for (cat of navCategories; track cat.slug) {
+        <a
+          routerLink="/pecas/{{ cat.slug }}"
+          routerLinkActive="bg-brand-100 text-brand-800"
+          class="flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium whitespace-nowrap text-ink-muted transition hover:bg-brand-50 hover:text-ink"
+        >
+          <app-category-icon [slug]="cat.slug" [size]="15" />
+          {{ cat.name }}
+        </a>
+      }
+    </div>
+  </nav>
 </header>
 
-<nav class="sticky top-0 z-40 border-b border-zinc-200 bg-white/95 backdrop-blur">
-  <div
-    class="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto px-2 py-1.5 sm:justify-between sm:px-4"
-  >
-    @for (cat of navCategories(); track cat.id) {
-      <a
-        routerLink="/pecas/{{ cat.slug }}"
-        routerLinkActive="bg-brand-50 text-brand-700"
-        class="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium whitespace-nowrap text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
-      >
-        <app-category-icon [slug]="cat.slug" [size]="16" />
-        {{ cat.name }}
-      </a>
-    }
+@if (mobileSearch()) {
+  <div class="fixed inset-0 z-[60] bg-ink/30 backdrop-blur-[2px] md:hidden" (click)="closeOverlays()">
+    <form
+      class="border-b border-brand-200 bg-paper p-3"
+      (click)="$event.stopPropagation()"
+      (submit)="goSearch(); $event.preventDefault()"
+    >
+      <input
+        type="search"
+        placeholder="Buscar peça, modelo ou marca…"
+        [value]="searchInput()"
+        (input)="onSearchInput($any($event.target).value)"
+        class="input"
+        autocomplete="off"
+        aria-label="Buscar peças"
+      />
+      @if (searchQ().length >= 2) {
+        <div class="mt-2 max-h-[60vh] overflow-y-auto">
+          @for (p of searchResults.value()?.items ?? []; track p.id) {
+            <a
+              routerLink="/pecas/{{ p.categorySlug }}/{{ p.id }}"
+              class="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-brand-50"
+            >
+              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50">
+                @if (p.imageUrl) {
+                  <img [src]="p.imageUrl" [alt]="p.name" class="max-h-full max-w-full object-contain" />
+                }
+              </span>
+              <span class="min-w-0 flex-1 truncate text-sm">{{ p.name }}</span>
+              <span class="text-sm font-semibold">{{ formatBRL(p.price) }}</span>
+            </a>
+          }
+        </div>
+      }
+    </form>
   </div>
-</nav>
+}
 
-<main class="mx-auto min-h-[60vh] max-w-6xl px-4 py-6">
+@if (menuOpen()) {
+  <div class="fixed inset-0 z-[60] bg-ink/30 backdrop-blur-[2px] lg:hidden" (click)="closeOverlays()">
+    <aside
+      class="flex h-full w-80 max-w-[85vw] flex-col bg-paper shadow-[var(--shadow-lift)]"
+      (click)="$event.stopPropagation()"
+      role="dialog"
+      aria-label="Menu"
+    >
+      <div class="flex h-16 items-center justify-between border-b border-brand-100 px-4">
+        <span class="font-display text-xl font-semibold">Open<span class="text-clay-600">PC</span></span>
+        <button type="button" class="btn-ghost !px-2" (click)="closeOverlays()" aria-label="Fechar menu">
+          ✕
+        </button>
+      </div>
+      <nav class="flex-1 overflow-y-auto p-3">
+        <a routerLink="/ofertas" class="flex items-center rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-brand-50">
+          Ofertas
+        </a>
+        <a routerLink="/montar" class="flex items-center rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-brand-50">
+          Montar meu PC
+        </a>
+        <p class="mt-4 mb-1 px-3 text-xs font-semibold tracking-[0.14em] text-ink-faint uppercase">
+          Categorias
+        </p>
+        @for (cat of navCategories; track cat.slug) {
+          <a
+            routerLink="/pecas/{{ cat.slug }}"
+            class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-ink-muted hover:bg-brand-50 hover:text-ink"
+          >
+            <app-category-icon [slug]="cat.slug" [size]="16" />
+            {{ cat.name }}
+          </a>
+        }
+      </nav>
+    </aside>
+  </div>
+}
+
+<main id="conteudo" class="mx-auto min-h-[70vh] max-w-6xl px-4 py-8">
   <router-outlet />
 </main>
 
-<footer class="mt-12 bg-brand-900 text-brand-200">
-  <div
-    class="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm sm:flex-row sm:items-center sm:justify-between"
-  >
+<footer class="mt-16 border-t border-brand-100 bg-brand-50/60">
+  <div class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-start sm:justify-between">
     <div>
-      <p class="text-base font-bold text-white">Open<span class="text-brand-300">PC</span></p>
-      <p class="mt-1 max-w-md text-xs text-brand-300">
+      <p class="font-display text-xl font-semibold text-ink">
+        Open<span class="text-clay-600">PC</span>
+      </p>
+      <p class="mt-2 max-w-md text-sm text-ink-muted">
         Preços coletados de Kabum, Pichau e Terabyte. Valores e estoque podem
         mudar — confirme sempre na loja antes de comprar.
       </p>
     </div>
-    <nav class="flex gap-4 text-xs">
-      <a routerLink="/" class="hover:text-white">Catálogo</a>
-      <a routerLink="/montar" class="hover:text-white">Montador</a>
+    <nav class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink-muted">
+      <a routerLink="/" class="hover:text-ink">Catálogo</a>
+      <a routerLink="/ofertas" class="hover:text-ink">Ofertas</a>
+      <a routerLink="/montar" class="hover:text-ink">Montador</a>
     </nav>
   </div>
 </footer>
